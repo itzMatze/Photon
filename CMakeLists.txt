@@ -4,7 +4,7 @@ project(Ray_Tracer_CPP)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(Ray_Tracer_CPP main.cpp render/Shader.cpp render/VertexBuffer.cpp defines.h render/Shader.h render/VertexBuffer.h render/Buffer.cpp render/Buffer.h render/Renderer.cpp render/Renderer.h)
+add_executable(Ray_Tracer_CPP main.cpp Color.cpp Color.h render/Renderer.cpp render/Renderer.h RayTracer.cpp RayTracer.h)
 
 find_library(glew glew32.lib "C:/dev/glew/glew-2.1.0/lib/Release/x64/")
 find_library(sdl SDL2.lib "C:/dev/VulkanSDK/1.2.170.0/Third-Party/Bin/")
