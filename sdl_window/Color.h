@@ -1,9 +1,7 @@
-//
-// Created by matth on 01.05.2021.
-//
+#ifndef RAY_TRACING_IOW_COLOR_H
+#define RAY_TRACING_IOW_COLOR_H
 
-#ifndef RAY_TRACER_CPP_COLOR_H
-#define RAY_TRACER_CPP_COLOR_H
+#include <vec4.hpp>
 
 class Color
 {
@@ -12,8 +10,8 @@ public:
     Color(float r, float g, float b);
     Color(float r, float g, float b, float a);
     unsigned int get_hex_color() const;
-private:
-    float r, g, b, a;
+
+    glm::vec4 values;
 };
 
-#endif //RAY_TRACER_CPP_COLOR_H
+#endif //RAY_TRACING_IOW_COLOR_H
