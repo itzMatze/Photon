@@ -9,7 +9,7 @@ public:
     Metal(const glm::vec3 a, float fuzz) : albedo(a)
     {this->fuzz = fuzz < 1 ? fuzz : 1.0f;}
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, Ray& scattered) const override;
+    bool scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override;
 
     glm::vec3 albedo;
     float fuzz;

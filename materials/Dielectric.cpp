@@ -1,6 +1,6 @@
 #include "Dielectric.h"
 
-bool Dielectric::scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, Ray& scattered) const
+bool Dielectric::scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const
 {
     glm::vec3 outward_normal;
     glm::vec3 reflected = glm::reflect(r_in.direction, rec.normal);
@@ -29,7 +29,7 @@ bool Dielectric::scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& atten
     {
         reflect_prob = 1.0f;
     }
-    if (random_num() < reflect_prob)
+    if (random_generator->random_num() < reflect_prob)
     {
         scattered = Ray(rec.p, reflected);
     }

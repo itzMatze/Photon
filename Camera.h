@@ -2,6 +2,7 @@
 #define RAY_TRACING_IOW_CAMERA_H
 
 #include "Ray.h"
+#include "RandomGenerator.h"
 
 class Camera
 {
@@ -27,14 +28,22 @@ public:
         vertical = 2.0f * half_height * focus_dist * v;
     }
 
-    Ray get_ray(float s, float t) const
+    Ray get_ray(float s, float t, RandomGenerator* random_generator) const
     {
-        // offset ray starting point depending on the lens radius
-        glm::vec3 rd = lens_radius * random_in_unit_sphere();
-        rd.z = 0.0f;
-        glm::vec3 offset = u * rd.x + v * rd.y;
-        // generate ray
-        return Ray(origin + offset, lower_left_corner + s * horizontal + t * vertical - origin - offset);
+        // if there is no dof, skip calculation
+        if (lens_radius > 0.0f)
+        {
+            // offset ray starting point depending on the lens radius
+            glm::vec3 rd = lens_radius * random_generator->random_in_unit_sphere();
+            rd.z = 0.0f;
+            glm::vec3 offset = u * rd.x + v * rd.y;
+            // generate ray
+            return Ray(origin + offset, lower_left_corner + s * horizontal + t * vertical - origin - offset);
+        }
+        else
+        {
+            return Ray(origin, lower_left_corner + s * horizontal + t * vertical - origin);
+        }
     }
     glm::vec3 origin;
     glm::vec3 lower_left_corner;
