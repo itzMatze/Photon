@@ -55,7 +55,8 @@ glm::vec4 calculate_color(const Ray& r, Hitable* world, RandomGenerator* random_
     }
 }
 
-void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, Renderer* render_window, RandomGenerator* random_generator)
+void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, Renderer* render_window,
+                          RandomGenerator* random_generator)
 {
     // as long as there are rows left, take one and calculate it
     for (int j = (*row)--; j >= 0; j = (*row)--)
@@ -86,6 +87,7 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
 {
     std::thread threads[NUM_THREADS];
     bool threads_joined = false;
+    int scene_index = -1;
     // this variable tells the threads which row to pick next for calculation
     std::atomic<int> row = ny - 1;
     for (auto& t : threads)
@@ -98,24 +100,69 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
     {
         render_window->render_frame();
         SDL_Event e;
-        if (SDL_PollEvent(&e))
+        while (SDL_PollEvent(&e))
         {
-            if (e.type == SDL_QUIT)
+            switch (e.type)
             {
-                quit = true;
-                // this line will trigger the thread joining block below
-                // the threads will immediately finish their execution, because they check if row >= 0
-                row = -NUM_THREADS - 1;
+                case SDL_QUIT:
+                    quit = true;
+                    // this line will trigger the thread joining block below
+                    // the threads will immediately finish their execution, because they check if row >= 0
+                    row = -NUM_THREADS - 1;
+                    break;
+                case SDL_KEYDOWN:
+                    switch (e.key.keysym.sym)
+                    {
+                        case SDLK_1:
+                            std::cout << "Scene 1" << std::endl;
+                            row = -NUM_THREADS - 1;
+                            scene_index = 1;
+                            break;
+                        case SDLK_2:
+                            std::cout << "Scene 2" << std::endl;
+                            row = -NUM_THREADS - 1;
+                            scene_index = 2;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
             }
         }
         // prevent threads from getting joined more than once
         // check if all threads are done with rendering, if there are no more rows left every thread will check this once and decrement row
-        if (!threads_joined && row < -NUM_THREADS)
+        if (scene_index > 0 || row < -NUM_THREADS)
         {
-            threads_joined = true;
-            for (auto& t : threads)
+            if (!threads_joined)
             {
-                t.join();
+                threads_joined = true;
+                for (auto& t : threads)
+                {
+                    t.join();
+                }
+            }
+            if (scene_index > 0)
+            {
+                // scene change or reload, restart rendering
+                render_window->clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
+                row = ny - 1;
+                switch (scene_index)
+                {
+                    case 1:
+                        world = random_scene(random_generator);
+                        break;
+                    case 2:
+                        world = create_scene();
+                        break;
+                    default:
+                        std::cout << "Error: Default case in scene loading reached!" << std::endl;
+                }
+                scene_index = -1;
+                for (auto& t : threads)
+                {
+                    t = std::thread(calculate_pixel_rows, cam, world, &row, render_window, random_generator);
+                }
+                threads_joined = false;
             }
         }
     }

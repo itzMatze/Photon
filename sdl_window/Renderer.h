@@ -14,11 +14,13 @@ public:
     Renderer(int width, int render_width, int render_height);
     ~Renderer();
     void clean_up_sdl() const;
+    void clean_surface(Color color);
     void render_frame();
     inline void set_pixel(int x, int y, Color color);
     const void* get_pixels();
 
     int render_width;
+    int render_height;
 private:
     SDL_Window* win = nullptr;
     SDL_Renderer* sdl_renderer = nullptr;

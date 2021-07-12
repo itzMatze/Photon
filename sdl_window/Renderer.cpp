@@ -1,8 +1,8 @@
 #include "Renderer.h"
 
-Renderer::Renderer(int width, int render_width, int render_height) : render_width(render_width)
+Renderer::Renderer(int width, int render_width, int render_height) : render_width(render_width), render_height(render_height)
 {
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+    SDL_Init(SDL_INIT_EVERYTHING);
 
     win = SDL_CreateWindow("Ray tracing", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, float(width) * float(render_height) / float(render_width), 0);//SDL_WINDOW_FULLSCREEN_DESKTOP);
 
@@ -11,13 +11,7 @@ Renderer::Renderer(int width, int render_width, int render_height) : render_widt
     SDL_GL_SetSwapInterval(1);
 
     bitmap_surface = SDL_CreateRGBSurface(0, render_width, render_height, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-    for (int i = 0; i < render_width; ++i)
-    {
-        for (int j = 0; j < render_height; ++j)
-        {
-            set_pixel(i, j, Color(0.0f, 0.0f, 0.0f, 0.0f));
-        }
-    }
+    clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 Renderer::~Renderer()
@@ -31,8 +25,18 @@ void Renderer::clean_up_sdl() const
     SDL_FreeSurface(bitmap_surface);
     SDL_DestroyRenderer(sdl_renderer);
     SDL_DestroyWindow(win);
-
     SDL_Quit();
+}
+
+void Renderer::clean_surface(Color color)
+{
+    for (int i = 0; i < render_width; ++i)
+    {
+        for (int j = 0; j < render_height; ++j)
+        {
+            set_pixel(i, j, color);
+        }
+    }
 }
 
 void Renderer::render_frame()
