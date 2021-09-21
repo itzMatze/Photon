@@ -18,6 +18,7 @@ public:
     void render_frame();
     inline void set_pixel(int x, int y, Color color);
     const void* get_pixels();
+    Color get_pixel(int x, int y) const;
 
     int render_width;
     int render_height;
