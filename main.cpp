@@ -58,11 +58,39 @@ glm::vec4 calculate_color(const Ray& r, Hitable* world, RandomGenerator* random_
     }
 }
 
-void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, std::atomic<int>* samples,
+// render all samples at once, due to the missing synchronisation stuff this is a little faster
+void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, Renderer* render_window,
+                          RandomGenerator* random_generator)
+{
+    // as long as there are rows left, take one and calculate it
+    for (int j = (*row)--; j >= 0; j = (*row)--)
+    {
+        // iterate through the pixels of the row
+        for (int i = 0; i < nx; ++i)
+        {
+            Color color(0.0f, 0.0f, 0.0f);
+            // number of samples
+            for (int s = 0; s < ns; ++s)
+            {
+                float u = (float(i) + random_generator->random_num()) / float(nx);
+                float v = (float(j) + random_generator->random_num()) / float(ny);
+                Ray r = cam->get_ray(u, v, random_generator);
+                // shoot ray
+                color.values += calculate_color(r, world, random_generator, 0);
+                // keep the system responsive
+                std::this_thread::yield();
+            }
+            color.values /= float(ns);
+            render_window->set_pixel(i, ny - j - 1, color);
+        }
+    }
+}
+
+// render scene incrementally and accumulate samples, more synchronisation overhead and thus a little slower
+void calculate_pixel_rows_incremental(Camera* cam, Hitable* world, std::atomic<int>* row, std::atomic<int>* samples,
                           Renderer* render_window,
                           RandomGenerator* random_generator)
 {
-    // TODO: add opportunity to either render all samples directly or do it incrementally
     // s is our sample count for the current row, if row gets reset there was no row left, so we take the sample count for the next iteration
     // this needs to be done here and inside the next loop, because not all threads get outside of the next loop, only one resets row
     for (int s = samples->load(); s <= ns; s = samples->load())
@@ -120,10 +148,11 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
     std::atomic<int> samples = 1;
     for (auto& t: threads)
     {
-        t = std::thread(calculate_pixel_rows, cam, world, &row, &samples, render_window, random_generator);
+        t = std::thread(calculate_pixel_rows_incremental, cam, world, &row, &samples, render_window, random_generator);
     }
     // render loop
     bool quit = false;
+    bool incremental = true;
     while (!quit)
     {
         render_window->render_frame();
@@ -153,6 +182,12 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                                 std::cout << "Rendering is not finished. Saving failed!" << std::endl;
                             }
                             break;
+                        case SDLK_f:
+                            incremental = !incremental;
+                            row = -NUM_THREADS - 1;
+                            samples = ns + 1;
+                            scene_index = 0;
+                            break;
                         case SDLK_1:
                             std::cout << "Scene 1" << std::endl;
                             row = -NUM_THREADS - 1;
@@ -173,7 +208,7 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
         }
         // prevent threads from getting joined more than once
         // check if all threads are done with rendering, if there are no more rows left every thread will check this once and decrement row
-        if (scene_index > 0 || samples < 1)
+        if (scene_index >= 0 || samples > ns)
         {
             if (!threads_joined)
             {
@@ -183,7 +218,7 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                     t.join();
                 }
             }
-            if (scene_index > 0)
+            if (scene_index >= 0)
             {
                 // scene change or reload, restart rendering
                 render_window->clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
@@ -191,6 +226,9 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                 samples = 1;
                 switch (scene_index)
                 {
+                    case 0:
+                        std::cout << "Restarting with last scene" << std::endl;
+                        break;
                     case 1:
                         world = random_scene(random_generator);
                         break;
@@ -203,7 +241,9 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                 scene_index = -1;
                 for (auto& t: threads)
                 {
-                    t = std::thread(calculate_pixel_rows, cam, world, &row, &samples, render_window, random_generator);
+                    t = incremental ?
+                            std::thread(calculate_pixel_rows_incremental, cam, world, &row, &samples, render_window, random_generator)
+                            : std::thread(calculate_pixel_rows, cam, world, &row, render_window, random_generator);
                 }
                 threads_joined = false;
             }
