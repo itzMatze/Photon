@@ -2,9 +2,12 @@
 #define RAY_TRACING_IOW_RENDERER_H
 
 #include <iostream>
+#include <imgui.h>
+#include <backends/imgui_impl_sdl.h>
+#include <backends/imgui_impl_sdlrenderer.h>
 #define SDL_MAIN_HANDLED
+#define SDL_HAVE_RENDER_GEOMETRY 1
 #include <SDL.h>
-#include <cassert>
 
 #include "Color.h"
 
@@ -15,7 +18,7 @@ public:
     ~Renderer();
     void clean_up_sdl() const;
     void clean_surface(Color color);
-    void render_frame();
+    void render_frame(bool show_gui, int& scene_index, bool& incremental, bool& save);
     inline void set_pixel(int x, int y, Color color);
     const void* get_pixels();
     Color get_pixel(int x, int y) const;
@@ -24,7 +27,9 @@ public:
     int render_height;
 private:
     SDL_Window* win = nullptr;
+    SDL_Window* imgui_win = nullptr;
     SDL_Renderer* sdl_renderer = nullptr;
+    SDL_Renderer* imgui_sdl_renderer = nullptr;
     SDL_Surface* bitmap_surface = nullptr;
 };
 

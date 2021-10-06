@@ -59,7 +59,7 @@ glm::vec4 calculate_color(const Ray& r, Hitable* world, RandomGenerator* random_
 }
 
 // render all samples at once, due to the missing synchronisation stuff this is a little faster
-void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, Renderer* render_window,
+void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, std::atomic<int>* samples, Renderer* render_window,
                           RandomGenerator* random_generator)
 {
     // as long as there are rows left, take one and calculate it
@@ -84,6 +84,7 @@ void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, Re
             render_window->set_pixel(i, ny - j - 1, color);
         }
     }
+    *samples = ns + 1;
 }
 
 // render scene incrementally and accumulate samples, more synchronisation overhead and thus a little slower
@@ -153,52 +154,30 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
     // render loop
     bool quit = false;
     bool incremental = true;
+    bool save = false;
+    bool show_gui = true;
     while (!quit)
     {
-        render_window->render_frame();
+        render_window->render_frame(show_gui, scene_index, incremental, save);
         SDL_Event e;
         while (SDL_PollEvent(&e))
         {
+            ImGui_ImplSDL2_ProcessEvent(&e);
+            if (e.window.event == SDL_WINDOWEVENT_CLOSE)
+            {
+                quit = true;
+                // this line will trigger the thread joining block below
+                // the threads will finish their execution, because they check if row >= 0 and samples <= ns
+                row = -NUM_THREADS - 1;
+                samples = ns + 1;
+            }
             switch (e.type)
             {
-                case SDL_QUIT:
-                    quit = true;
-                    // this line will trigger the thread joining block below
-                    // the threads will finish their execution, because they check if row >= 0 and samples <= ns
-                    row = -NUM_THREADS - 1;
-                    samples = ns + 1;
-                    break;
                 case SDL_KEYDOWN:
                     switch (e.key.keysym.sym)
                     {
-                        case SDLK_s:
-                            if (threads_joined)
-                            {
-                                save_image((uint32_t*) render_window->get_pixels(), "", nx, ny, channels);
-                                std::cout << "Image saved!" << std::endl;
-                            }
-                            else
-                            {
-                                std::cout << "Rendering is not finished. Saving failed!" << std::endl;
-                            }
-                            break;
-                        case SDLK_f:
-                            incremental = !incremental;
-                            row = -NUM_THREADS - 1;
-                            samples = ns + 1;
-                            scene_index = 0;
-                            break;
-                        case SDLK_1:
-                            std::cout << "Scene 1" << std::endl;
-                            row = -NUM_THREADS - 1;
-                            samples = ns + 1;
-                            scene_index = 1;
-                            break;
-                        case SDLK_2:
-                            std::cout << "Scene 2" << std::endl;
-                            row = -NUM_THREADS - 1;
-                            samples = ns + 1;
-                            scene_index = 2;
+
+                        case SDLK_g:
                             break;
                         default:
                             break;
@@ -210,6 +189,8 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
         // check if all threads are done with rendering, if there are no more rows left every thread will check this once and decrement row
         if (scene_index >= 0 || samples > ns)
         {
+            row = -NUM_THREADS - 1;
+            samples = ns + 1;
             if (!threads_joined)
             {
                 threads_joined = true;
@@ -235,6 +216,9 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                     case 2:
                         world = create_scene();
                         break;
+                    case 3:
+                        world = bezier_scene();
+                        break;
                     default:
                         std::cout << "Error: Default case in scene loading reached!" << std::endl;
                 }
@@ -243,10 +227,23 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                 {
                     t = incremental ?
                             std::thread(calculate_pixel_rows_incremental, cam, world, &row, &samples, render_window, random_generator)
-                            : std::thread(calculate_pixel_rows, cam, world, &row, render_window, random_generator);
+                            : std::thread(calculate_pixel_rows, cam, world, &row, &samples, render_window, random_generator);
                 }
                 threads_joined = false;
             }
+        }
+        if (save)
+        {
+            if (threads_joined)
+            {
+                save_image((uint32_t*) render_window->get_pixels(), "", nx, ny, channels);
+                std::cout << "Image saved!" << std::endl;
+            }
+            else
+            {
+                std::cout << "Rendering is not finished. Saving failed!" << std::endl;
+            }
+            save = false;
         }
         std::this_thread::yield();
     }
@@ -259,7 +256,6 @@ int main()
     Renderer render_window(1000, nx, ny);
     // TODO probably also render first in lower resolution and then add resolution (this is probably not so easy)
     RandomGenerator random_generator;
-    // TODO use imgui to build user interface where you are able to change the scene
     Hitable* scene = random_scene(&random_generator);
 
     trace(&cam, scene, &render_window, &random_generator);
