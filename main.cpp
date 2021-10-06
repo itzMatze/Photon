@@ -6,23 +6,22 @@
 #include "Camera.h"
 #include "Factory.h"
 
-#define NUM_THREADS 14
+#define NUM_THREADS 15
 // choose to render image fast or in great quality
 #if 1
 constexpr int nx = 1000;
 constexpr int ny = 800;
-constexpr int ns = 4;
-constexpr int max_depth = 6;
+constexpr int ns = 16;
+constexpr int max_depth = 10;
 #else
 constexpr int nx = 3840;
 constexpr int ny = 2160;
 constexpr int ns = 256;
-constexpr int max_depth = 20;
+constexpr int max_depth = 15;
 #endif
 constexpr int channels = 4;
 
 std::mutex mutex;
-int sample_count[ny];
 
 glm::vec4 calculate_color(const Ray& r, Hitable* world, RandomGenerator* random_generator, int depth)
 {
@@ -64,15 +63,16 @@ void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, st
                           RandomGenerator* random_generator)
 {
     // TODO: add opportunity to either render all samples directly or do it incrementally
-    // TODO: check if the sample_count array can be replaced by using samples
-    while (samples->load() > 0)
+    // s is our sample count for the current row, if row gets reset there was no row left, so we take the sample count for the next iteration
+    // this needs to be done here and inside the next loop, because not all threads get outside of the next loop, only one resets row
+    for (int s = samples->load(); s <= ns; s = samples->load())
     {
         // as long as there are rows left, take one and calculate it
         for (int j = (*row)--; j >= 0; j = (*row)--)
         {
-            // we could get in trouble if two threads are calculating the same row but for a different sample count
-            // but this should really never happen (we need either very few rows or lots of threads)
-            sample_count[j]++;
+            // we get in trouble if two threads are calculating the same row but for a different sample count
+            // and then overtakes the first thread, but this should really never happen (we need either very few rows or lots of threads)
+            s = samples->load();
             // iterate through the pixels of the row
             for (int i = 0; i < nx; ++i)
             {
@@ -87,8 +87,8 @@ void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, st
                 // keep the system responsive
                 std::this_thread::yield();
                 // calculate relative weight of pixel_color and new calculated color sample
-                color.values /= float(sample_count[j]);
-                pixel_color.values *= (float(sample_count[j] - 1) / float(sample_count[j]));
+                color.values /= float(s);
+                pixel_color.values *= (float(s - 1) / float(s));
                 color.values += pixel_color.values;
                 render_window->set_pixel(i, ny - j - 1, color);
             }
@@ -99,10 +99,10 @@ void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, st
         if (*row < 0)
         {
             // also, no reset if the sample_count is reached (threads get locked in the *row for loop if this doesn't get checked)
-            if (--(*samples) > 0)
+            if (++(*samples) <= ns)
             {
                 *row = ny - 1;
-                std::cout << "Remaining samples: " << *samples << std::endl;
+                std::cout << "Remaining samples: " << ns - *samples << std::endl;
             }
         }
         locker.unlock();
@@ -117,7 +117,7 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
     // tells the threads which row to pick next for calculation
     std::atomic<int> row = ny - 1;
     // and how many sample iterations are left
-    std::atomic<int> samples = ns;
+    std::atomic<int> samples = 1;
     for (auto& t: threads)
     {
         t = std::thread(calculate_pixel_rows, cam, world, &row, &samples, render_window, random_generator);
@@ -135,9 +135,9 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                 case SDL_QUIT:
                     quit = true;
                     // this line will trigger the thread joining block below
-                    // the threads will finish their execution, because they check if row >= 0 and samples > 0
+                    // the threads will finish their execution, because they check if row >= 0 and samples <= ns
                     row = -NUM_THREADS - 1;
-                    samples = 0;
+                    samples = ns + 1;
                     break;
                 case SDL_KEYDOWN:
                     switch (e.key.keysym.sym)
@@ -156,13 +156,13 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                         case SDLK_1:
                             std::cout << "Scene 1" << std::endl;
                             row = -NUM_THREADS - 1;
-                            samples = 0;
+                            samples = ns + 1;
                             scene_index = 1;
                             break;
                         case SDLK_2:
                             std::cout << "Scene 2" << std::endl;
                             row = -NUM_THREADS - 1;
-                            samples = 0;
+                            samples = ns + 1;
                             scene_index = 2;
                             break;
                         default:
@@ -188,11 +188,7 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                 // scene change or reload, restart rendering
                 render_window->clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
                 row = ny - 1;
-                samples = ns;
-                for (int& i: sample_count)
-                {
-                    i = 0;
-                }
+                samples = 1;
                 switch (scene_index)
                 {
                     case 1:
@@ -225,11 +221,6 @@ int main()
     RandomGenerator random_generator;
     // TODO use imgui to build user interface where you are able to change the scene
     Hitable* scene = random_scene(&random_generator);
-
-    for (int& i: sample_count)
-    {
-        i = 0;
-    }
 
     trace(&cam, scene, &render_window, &random_generator);
     return 0;
