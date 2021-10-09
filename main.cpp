@@ -178,6 +178,7 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                     {
 
                         case SDLK_g:
+                            show_gui = !show_gui;
                             break;
                         default:
                             break;
