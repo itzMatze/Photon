@@ -1,7 +1,7 @@
 #ifndef RAY_TRACING_IOW_COLOR_H
 #define RAY_TRACING_IOW_COLOR_H
 
-#include <vec4.hpp>
+#include <glm.hpp>
 
 class Color
 {
