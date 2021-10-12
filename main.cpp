@@ -218,7 +218,7 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                         world = create_scene();
                         break;
                     case 3:
-                        world = bezier_scene();
+                        world = line_scene();
                         break;
                     default:
                         std::cout << "Error: Default case in scene loading reached!" << std::endl;

@@ -91,6 +91,9 @@ void Renderer::render_frame(bool show_gui, int& scene_index, bool& incremental, 
         }
         ImGui::SameLine();
         if (ImGui::Button("3"))
+        {
+            scene_index = 3;
+        }
         if (ImGui::Button(incremental ? "Render incrementally: true" : "Render incrementally: false"))
         {
             incremental = !incremental;

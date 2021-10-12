@@ -13,5 +13,6 @@
 void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int channels);
 Hitable* random_scene(RandomGenerator* random_generator);
 Hitable* create_scene();
+Hitable* line_scene();
 
 #endif //RAY_TRACER_CPP_FACTORY_H

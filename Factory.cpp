@@ -1,6 +1,7 @@
 #include "Factory.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
+#include <objects/Segment.h>
 
 void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int channels)
 {
@@ -107,4 +108,21 @@ Hitable* create_scene()
     objects->push_back(new Sphere(glm::vec3(0.3f, -0.3f, -1.1f), 0.2f, *silver));
     Hitable* ran_scene = new HitableList(objects);
     return ran_scene;
+}
+
+Hitable* line_scene()
+{
+    auto* list = new std::vector<Hitable*>;
+    Lambertian* mat = new Lambertian(glm::vec3(0.1f, 0.8f, 0.8f));
+    Metal* silver = new Metal(glm::vec3(0.8f, 0.8f, 0.8f), 0.01f);
+    Metal* gold = new Metal(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
+    glm::vec3 p0, p1;
+    p0 = glm::vec3(1.0f, 3.0f, -3.0f);
+    p1 = glm::vec3(-1.0f, -1.0f, -4.0f);
+    list->push_back(new Segment(p0, p1, 0.2f, *silver));
+    p0 = glm::vec3(1.5f, 3.0f, -2.0f);
+    p1 = glm::vec3(-0.5f, -1.0f, -3.0f);
+    list->push_back(new Segment(p0, p1, 0.2f, *gold));
+    list->push_back(new Sphere(glm::vec3(-1.3f, 1.3f, -2.1f), 0.6f, *mat));
+    return new HitableList(list);
 }
