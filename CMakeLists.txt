@@ -9,7 +9,7 @@ set(stb_dir X:/Stuff/stb/01.04/)
 set(ImGui_dir X:/Stuff/imgui/imgui-sdlrenderer)
 set(SDL_dir X:/Stuff/SDL2/SDL-main)
 
-add_executable(Ray_Tracer_CPP main.cpp Ray.h Camera.h HitRecord.h
+add_executable(Ray_Tracer_CPP main.cpp Ray.h Camera.h HitRecord.h RayTracer.h RayTracer.cpp
         objects/Hitable.h objects/Sphere.cpp objects/Sphere.h objects/HitableList.cpp objects/HitableList.h objects/Segment.cpp objects/Segment.h
         materials/Material.h materials/Lambertian.cpp materials/Lambertian.h materials/Metal.cpp materials/Metal.h materials/Dielectric.cpp materials/Dielectric.h
         sdl_window/Color.cpp sdl_window/Color.h sdl_window/Renderer.cpp sdl_window/Renderer.h RandomGenerator.cpp RandomGenerator.h Factory.cpp Factory.h

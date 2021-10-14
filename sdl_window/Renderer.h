@@ -5,11 +5,20 @@
 #include <imgui.h>
 #include <backends/imgui_impl_sdl.h>
 #include <backends/imgui_impl_sdlrenderer.h>
+
 #define SDL_MAIN_HANDLED
 #define SDL_HAVE_RENDER_GEOMETRY 1
 #include <SDL.h>
 
 #include "Color.h"
+
+struct RenderingInfo
+{
+    int ns;
+    int max_depth;
+    int scene_index;
+    bool incremental;
+};
 
 class Renderer
 {
@@ -18,14 +27,18 @@ public:
     ~Renderer();
     void clean_up_sdl();
     void clean_surface(Color color);
-    void render_frame(bool show_gui, int& scene_index, bool& incremental, bool& save);
+    bool render_frame(RenderingInfo& r_info, bool& save);
     inline void set_pixel(int x, int y, Color color);
     const void* get_pixels();
     Color get_pixel(int x, int y) const;
 
+    void toggle_show_gui()
+    {show_gui = !show_gui;}
+
     int render_width;
     int render_height;
 private:
+    bool show_gui = true;
     SDL_Window* win = nullptr;
     SDL_Window* imgui_win = nullptr;
     SDL_Renderer* sdl_renderer = nullptr;

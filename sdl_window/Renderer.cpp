@@ -60,8 +60,9 @@ void Renderer::clean_surface(Color color)
     }
 }
 
-void Renderer::render_frame(bool show_gui, int& scene_index, bool& incremental, bool& save)
+bool Renderer::render_frame(RenderingInfo& r_info, bool& save)
 {
+    bool apply = false;
     SDL_RenderClear(sdl_renderer);
     if (show_gui)
     {
@@ -82,39 +83,47 @@ void Renderer::render_frame(bool show_gui, int& scene_index, bool& incremental, 
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImVec2(imgui_width, imgui_height));
         ImGui::Begin("ImGui");
-        ImGui::Text("Press 'G' to show or hide this GUI-Window");
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
-                    ImGui::GetIO().Framerate);
-        ImGui::Text("Scene:");
-        ImGui::SameLine();
-        if (ImGui::Button("1"))
-        {
-            scene_index = 1;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("2"))
-        {
-            scene_index = 2;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("3"))
-        {
-            scene_index = 3;
-        }
-        if (ImGui::Button(incremental ? "Render incrementally: true" : "Render incrementally: false"))
-        {
-            incremental = !incremental;
-            scene_index = 0;
-        }
         if (ImGui::Button("Save Image"))
         {
             save = true;
         }
+        ImGui::Text("Press 'G' to show or hide this GUI-Window");
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
+                    ImGui::GetIO().Framerate);
+        ImGui::Separator();
+        ImGui::Text("Scene:");
+        ImGui::SameLine();
+        if (ImGui::RadioButton("1", r_info.scene_index == 1))
+        {
+            r_info.scene_index = 1;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("2", r_info.scene_index == 2))
+        {
+            r_info.scene_index = 2;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("3", r_info.scene_index == 3))
+        {
+            r_info.scene_index = 3;
+        }
+        if (ImGui::Button(r_info.incremental ? "Render incrementally: true" : "Render incrementally: false"))
+        {
+            r_info.incremental = !r_info.incremental;
+        }
+        ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(0, 100, 0, 255));
+        if (ImGui::Button("Apply"))
+        {
+            apply = true;
+        }
+        ImGui::PopStyleColor();
+        ImGui::Separator();
         ImGui::End();
         ImGui::Render();
         ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
         SDL_RenderPresent(imgui_sdl_renderer);
     }
+        // user doesn't want gui but it is still there, so destroy it
     else if (imgui_win != nullptr)
     {
         SDL_DestroyWindow(imgui_win);
@@ -126,6 +135,7 @@ void Renderer::render_frame(bool show_gui, int& scene_index, bool& incremental, 
     SDL_RenderCopy(sdl_renderer, bitmapTex, nullptr, nullptr);
     SDL_RenderPresent(sdl_renderer);
     SDL_DestroyTexture(bitmapTex);
+    return apply;
 }
 
 inline void Renderer::set_pixel(int x, int y, Color color)
