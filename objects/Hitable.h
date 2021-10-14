@@ -1,6 +1,8 @@
 #ifndef RAY_TRACING_IOW_HITABLE_H
 #define RAY_TRACING_IOW_HITABLE_H
 
+#include <memory>
+
 #include "Ray.h"
 #include "HitRecord.h"
 

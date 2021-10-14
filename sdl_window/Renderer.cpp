@@ -31,14 +31,21 @@ Renderer::Renderer(int width, int render_width, int render_height) : render_widt
 Renderer::~Renderer()
 {
     // sdl seems to clean itself up
-    //clean_up_sdl();
+    clean_up_sdl();
 }
 
-void Renderer::clean_up_sdl() const
+void Renderer::clean_up_sdl()
 {
     SDL_FreeSurface(bitmap_surface);
+    bitmap_surface = nullptr;
     SDL_DestroyRenderer(sdl_renderer);
+    sdl_renderer = nullptr;
+    SDL_DestroyRenderer(imgui_sdl_renderer);
+    bitmap_surface = nullptr;
     SDL_DestroyWindow(win);
+    win = nullptr;
+    SDL_DestroyWindow(imgui_win);
+    imgui_win = nullptr;
     SDL_Quit();
 }
 
@@ -111,9 +118,9 @@ void Renderer::render_frame(bool show_gui, int& scene_index, bool& incremental, 
     else if (imgui_win != nullptr)
     {
         SDL_DestroyWindow(imgui_win);
+        imgui_win = nullptr;
         SDL_DestroyRenderer(imgui_sdl_renderer);
         imgui_sdl_renderer = nullptr;
-        imgui_win = nullptr;
     }
     SDL_Texture* bitmapTex = SDL_CreateTextureFromSurface(sdl_renderer, bitmap_surface);
     SDL_RenderCopy(sdl_renderer, bitmapTex, nullptr, nullptr);

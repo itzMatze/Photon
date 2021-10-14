@@ -43,12 +43,11 @@ void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int c
     stbi_write_png(path_to_image.string().c_str(), nx, ny, channels, pixels, nx * channels);
 }
 
-Hitable* random_scene(RandomGenerator* random_generator)
+std::shared_ptr<Hitable> random_scene(RandomGenerator* random_generator)
 {
-    auto* list = new std::vector<Hitable*>;
-    Lambertian* silver = new Lambertian(glm::vec3(0.2f, 0.5f, 0.5f));
-    Sphere* s = new Sphere(glm::vec3(0.0f, -1000.0f, 0.0f), 1000.0f, *silver);
-    list->push_back(s);
+    std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
+    std::shared_ptr<Material> silver = std::make_shared<Lambertian>(glm::vec3(0.2f, 0.5f, 0.5f));
+    objects->emplace_back(std::make_shared<Sphere>(glm::vec3(0.0f, -1000.0f, 0.0f), 1000.0f, silver));
     for (int a = -11; a < 11; ++a)
     {
         for (int b = -11; b < 11; ++b)
@@ -59,70 +58,63 @@ Hitable* random_scene(RandomGenerator* random_generator)
             {
                 if (choose_mat < 0.7f)
                 {
-                    Lambertian* color = new Lambertian(
+                    std::shared_ptr<Material> color = std::make_shared<Lambertian>(
                             glm::vec3(glm::max(random_generator->random_num(), 0.2f), glm::max(random_generator->random_num(), 0.2f),
                                       glm::max(random_generator->random_num(), 0.2f)));
-                    s = new Sphere(center, 0.2f, *color);
-                    list->push_back(s);
+                    objects->push_back(std::make_shared<Sphere>(center, 0.2f, color));
                 }
                 else if (choose_mat < 0.95f)
                 {
-                    Metal* color = new Metal(glm::vec3(glm::max(random_generator->random_num(), 0.2f), glm::max(random_generator->random_num(), 0.2f),
+                    std::shared_ptr<Material> color = std::make_shared<Metal>(glm::vec3(glm::max(random_generator->random_num(), 0.2f), glm::max(random_generator->random_num(), 0.2f),
                                                        glm::max(random_generator->random_num(), 0.2f)), 0.3f * random_generator->random_num());
-                    s = new Sphere(center, 0.2f, *color);
-                    list->push_back(s);
+                    objects->push_back(std::make_shared<Sphere>(center, 0.2f, color));
                 }
                 else
                 {
-                    Dielectric* color = new Dielectric(1.5f);
-                    s = new Sphere(center, 0.2f, *color);
-                    list->push_back(s);
+                    std::shared_ptr<Material> color = std::make_shared<Dielectric>(1.5f);
+                    objects->push_back(std::make_shared<Sphere>(center, 0.2f, color));
                 }
             }
         }
     }
-    Lambertian* color = new Lambertian(glm::vec3(0.1f, 0.8f, 0.9f));
-    Metal* metal_color = new Metal(glm::vec3(0.8f, 0.8f, 0.8f), 0.001f);
-    s = new Sphere(glm::vec3(-1.0f, 2.0f, -2.6f), 1.0f, *metal_color);
-    list->push_back(s);
-    s = new Sphere(glm::vec3(2.0f, 1.8f, -3.0f), 1.0f, *color);
-    list->push_back(s);
-    Hitable* ran_scene = new HitableList(list);
-    return ran_scene;
+    std::shared_ptr<Material> color = std::make_shared<Lambertian>(glm::vec3(0.1f, 0.8f, 0.9f));
+    std::shared_ptr<Material> metal_color = std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.001f);
+    objects->push_back(std::make_shared<Sphere>(glm::vec3(-1.0f, 2.0f, -2.6f), 1.0f, metal_color));
+    objects->push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 1.8f, -3.0f), 1.0f, color));
+    return std::make_shared<HitableList>(objects);
 }
 
-Hitable* create_scene()
+std::shared_ptr<Hitable> create_scene()
 {
-    auto* objects = new std::vector<Hitable*>;
+    std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
     // creating a few materials
-    Lambertian* lambertian_1 = new Lambertian(glm::vec3(0.5f, 0.1f, 0.7f));
-    Lambertian* lambertian_2 = new Lambertian(glm::vec3(0.1f, 0.8f, 0.8f));
-    Metal* silver = new Metal(glm::vec3(0.8f, 0.8f, 0.8f), 0.01f);
-    Metal* gold = new Metal(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
-    Dielectric* glass = new Dielectric(1.5f);
+    std::shared_ptr<Material> lambertian_1 = std::make_shared<Lambertian>(glm::vec3(0.5f, 0.1f, 0.7f));
+    std::shared_ptr<Material> lambertian_2 = std::make_shared<Lambertian>(glm::vec3(0.1f, 0.8f, 0.8f));
+    std::shared_ptr<Material> silver = std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.01f);
+    std::shared_ptr<Material> gold = std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
+    std::shared_ptr<Material> glass = std::make_shared<Dielectric>(1.5f);
     // creating the spheres
-    objects->push_back(new Sphere(glm::vec3(0.0f, 0.0f, -2.0f), 0.5, *lambertian_1));
-    objects->push_back(new Sphere(glm::vec3(0.0f, -100.5f, -2.0f), 100, *lambertian_2));
-    objects->push_back(new Sphere(glm::vec3(1.1f, 0.0f, -2.0f), 0.5f, *glass));
-    objects->push_back(new Sphere(glm::vec3(-1.1f, 0.0f, -2.0f), 0.5f, *gold));
-    objects->push_back(new Sphere(glm::vec3(0.3f, -0.3f, -1.1f), 0.2f, *silver));
-    Hitable* ran_scene = new HitableList(objects);
-    return ran_scene;
+    objects->push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -2.0f), 0.5f, lambertian_1));
+    objects->push_back(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -2.0f), 100.0f, lambertian_2));
+    objects->push_back(std::make_shared<Sphere>(glm::vec3(1.1f, 0.0f, -2.0f), 0.5f, glass));
+    objects->push_back(std::make_shared<Sphere>(glm::vec3(-1.1f, 0.0f, -2.0f), 0.5f, gold));
+    objects->push_back(std::make_shared<Sphere>(glm::vec3(0.3f, -0.3f, -1.1f), 0.2f, silver));
+    return std::make_shared<HitableList>(objects);
 }
 
-Hitable* line_scene()
+std::shared_ptr<Hitable> line_scene()
 {
-    auto* list = new std::vector<Hitable*>;
-    Lambertian* mat = new Lambertian(glm::vec3(0.1f, 0.8f, 0.8f));
-    Metal* silver = new Metal(glm::vec3(0.8f, 0.8f, 0.8f), 0.01f);
-    Metal* gold = new Metal(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
+    std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
+    std::shared_ptr<Material> mat = std::make_shared<Lambertian>(glm::vec3(0.1f, 0.8f, 0.8f));
+    std::shared_ptr<Material> silver = std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.01f);
+    std::shared_ptr<Material> gold = std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
     glm::vec3 p0, p1;
     p0 = glm::vec3(1.0f, 3.0f, -3.0f);
     p1 = glm::vec3(-1.0f, -1.0f, -4.0f);
-    list->push_back(new Segment(p0, p1, 0.2f, *silver));
+    objects->push_back(std::make_shared<Segment>(p0, p1, 0.2f, silver));
     p0 = glm::vec3(1.5f, 3.0f, -2.0f);
     p1 = glm::vec3(-0.5f, -1.0f, -3.0f);
-    list->push_back(new Segment(p0, p1, 0.2f, *gold));
-    list->push_back(new Sphere(glm::vec3(-1.3f, 1.3f, -2.1f), 0.6f, *mat));
-    return new HitableList(list);
+    objects->push_back(std::make_shared<Segment>(p0, p1, 0.2f, gold));
+    objects->push_back(std::make_shared<Sphere>(glm::vec3(-1.3f, 1.3f, -2.1f), 0.6f, mat));
+    return std::make_shared<HitableList>(objects);
 }

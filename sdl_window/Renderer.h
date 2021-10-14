@@ -16,7 +16,7 @@ class Renderer
 public:
     Renderer(int width, int render_width, int render_height);
     ~Renderer();
-    void clean_up_sdl() const;
+    void clean_up_sdl();
     void clean_surface(Color color);
     void render_frame(bool show_gui, int& scene_index, bool& incremental, bool& save);
     inline void set_pixel(int x, int y, Color color);

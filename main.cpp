@@ -23,9 +23,10 @@ constexpr int channels = 4;
 
 std::mutex mutex;
 
-glm::vec4 calculate_color(const Ray& r, Hitable* world, RandomGenerator* random_generator, int depth)
+glm::vec4
+calculate_color(const Ray& r, const std::shared_ptr<Hitable>& world, RandomGenerator* random_generator, int depth)
 {
-    HitRecord rec = {};
+    HitRecord rec;
     // intersection test
     if (world->hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
     {
@@ -59,7 +60,8 @@ glm::vec4 calculate_color(const Ray& r, Hitable* world, RandomGenerator* random_
 }
 
 // render all samples at once, due to the missing synchronisation stuff this is a little faster
-void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, std::atomic<int>* samples, Renderer* render_window,
+void calculate_pixel_rows(Camera* cam, const std::shared_ptr<Hitable>& world, std::atomic<int>* row,
+                          std::atomic<int>* samples, Renderer* render_window,
                           RandomGenerator* random_generator)
 {
     // as long as there are rows left, take one and calculate it
@@ -88,9 +90,9 @@ void calculate_pixel_rows(Camera* cam, Hitable* world, std::atomic<int>* row, st
 }
 
 // render scene incrementally and accumulate samples, more synchronisation overhead and thus a little slower
-void calculate_pixel_rows_incremental(Camera* cam, Hitable* world, std::atomic<int>* row, std::atomic<int>* samples,
-                          Renderer* render_window,
-                          RandomGenerator* random_generator)
+void calculate_pixel_rows_incremental(Camera* cam, const std::shared_ptr<Hitable>& world, std::atomic<int>* row,
+                                      std::atomic<int>* samples, Renderer* render_window,
+                                      RandomGenerator* random_generator)
 {
     // s is our sample count for the current row, if row gets reset there was no row left, so we take the sample count for the next iteration
     // this needs to be done here and inside the next loop, because not all threads get outside of the next loop, only one resets row
@@ -138,7 +140,7 @@ void calculate_pixel_rows_incremental(Camera* cam, Hitable* world, std::atomic<i
     }
 }
 
-void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator* random_generator)
+void trace(Camera* cam, std::shared_ptr<Hitable>& world, Renderer* render_window, RandomGenerator* random_generator)
 {
     std::thread threads[NUM_THREADS];
     bool threads_joined = false;
@@ -226,9 +228,8 @@ void trace(Camera* cam, Hitable* world, Renderer* render_window, RandomGenerator
                 scene_index = -1;
                 for (auto& t: threads)
                 {
-                    t = incremental ?
-                            std::thread(calculate_pixel_rows_incremental, cam, world, &row, &samples, render_window, random_generator)
-                            : std::thread(calculate_pixel_rows, cam, world, &row, &samples, render_window, random_generator);
+                    t = std::thread((incremental ? calculate_pixel_rows_incremental : calculate_pixel_rows),
+                                    cam, world, &row, &samples, render_window, random_generator);
                 }
                 threads_joined = false;
             }
@@ -255,9 +256,9 @@ int main()
     Camera cam(glm::vec3(0.0f, 1.5f, 0.0f), glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 1.0f, 0.0f),
                90.0f, float(nx) / float(ny), 0.01f, 2.0f);
     Renderer render_window(1000, nx, ny);
-    // TODO probably also render first in lower resolution and then add resolution (this is probably not so easy)
+    // TODO render first in lower resolution and then add resolution (this is probably not so easy)
     RandomGenerator random_generator;
-    Hitable* scene = random_scene(&random_generator);
+    std::shared_ptr<Hitable> scene = random_scene(&random_generator);
 
     trace(&cam, scene, &render_window, &random_generator);
     return 0;

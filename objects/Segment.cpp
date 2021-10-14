@@ -66,7 +66,7 @@ bool Segment::hit(const Ray& ray, float t_min, float t_max, HitRecord& rec) cons
         rec.t = t;
         rec.p = ray.point_at_parameter(rec.t);
         rec.normal = glm::cross(glm::cross((p1 - p0), (rec.p - p0)), (p1 - p0));
-        rec.mat = &mat;
+        rec.mat = mat;
         return true;
     }
     return false;
