@@ -19,7 +19,7 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
         }
         else
         {
-            return {};
+            return glm::vec4{0.0f, 0.0f, 0.0f, 1.0f};
         }
 #else
         // visualization of normals
