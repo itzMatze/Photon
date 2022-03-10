@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "../sdl_window/Color.h"
+#include "sdl_window/Color.h"
 
 class ColorTestFixture : public ::testing::Test
 {
