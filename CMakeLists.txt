@@ -18,26 +18,28 @@ set(SOURCE_FILES src/RayTracer.cpp src/RandomGenerator.cpp src/Factory.cpp
 add_executable(Ray_Tracer_CPP src/main.cpp ${SOURCE_FILES})
 
 find_package(glm REQUIRED)
+find_package(SDL2 REQUIRED)
 
 find_library(SDL2_LIB SDL2.lib ${SDL2_DIR}/lib/x64/)
 
-target_link_libraries(Ray_Tracer_CPP ${SDL2_LIB})
-
+target_link_libraries(Ray_Tracer_CPP ${SDL2_LIBRARIES})
 include_directories(Ray_Tracer_CPP PUBLIC
         "${PROJECT_SOURCE_DIR}/include"
-        "${SDL2_DIR}/include"
+        ${SDL2_INCLUDE_DIRS}
         "${stb_dir}"
         "${ImGui_dir}"
         ${GLM_INCLUDE_DIRS})
 
-configure_file("${SDL2_DIR}/lib/x64/SDL2.dll" "${CMAKE_BINARY_DIR}/" COPYONLY)
+if (WIN32)
+    configure_file("${SDL2_LIBRARIES_DIR}/SDL2.dll" "${CMAKE_BINARY_DIR}/" COPYONLY)
+endif()
 
 enable_testing()
 
 add_subdirectory(${google_test_DIR} ${CMAKE_BINARY_DIR}/googletest EXCLUDE_FROM_ALL)
 
 add_executable(run_google_test google_test/ColorTest.cpp ${SOURCE_FILES})
-target_link_libraries(run_google_test gtest_main ${sdl})
+target_link_libraries(run_google_test gtest_main ${SDL2_LIBRARIES})
 
 include(GoogleTest)
 gtest_discover_tests(run_google_test)

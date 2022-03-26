@@ -3,6 +3,7 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include <atomic>
 
 #include "sdl_window/Renderer.h"
 #include "Camera.h"

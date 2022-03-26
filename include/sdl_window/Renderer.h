@@ -26,7 +26,13 @@ public:
     void clean_up_sdl();
     void clean_surface(Color color);
     bool render_frame(RenderingInfo& r_info, bool& save);
-    inline void set_pixel(int x, int y, Color color);
+    inline void set_pixel(int x, int y, Color color)
+    {
+    assert(x < render_width && y < render_height);
+    //SDL_LockSurface(bitmap_surface);
+    ((uint32_t*) (bitmap_surface->pixels))[(x + render_width * y)] = color.get_hex_color();
+    //SDL_UnlockSurface(bitmap_surface);
+    }
     const void* get_pixels();
     Color get_pixel(int x, int y) const;
 

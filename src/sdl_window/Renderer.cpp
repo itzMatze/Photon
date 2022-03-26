@@ -138,14 +138,6 @@ bool Renderer::render_frame(RenderingInfo& r_info, bool& save)
     return apply;
 }
 
-inline void Renderer::set_pixel(int x, int y, Color color)
-{
-    assert(x < render_width && y < render_height);
-    //SDL_LockSurface(bitmap_surface);
-    ((uint32_t*) (bitmap_surface->pixels))[(x + render_width * y)] = color.get_hex_color();
-    //SDL_UnlockSurface(bitmap_surface);
-}
-
 const void* Renderer::get_pixels()
 {
     return bitmap_surface->pixels;

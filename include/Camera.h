@@ -10,7 +10,7 @@ public:
     : origin(origin), lens_radius(aperture / 2.0f)
     {
         // to radian
-        float theta = vfov * std::_Pi / 180.0f;
+        float theta = vfov * M_PI / 180.0f;
         // dimensions of image plane
         float half_height = tan(theta / 2.0f);
         float half_width = aspect * half_height;
