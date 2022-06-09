@@ -47,7 +47,7 @@ int main()
     while (!quit)
     {
         SDL_Event e;
-        if (SDL_PollEvent(&e))
+        while (SDL_PollEvent(&e))
         {
             ImGui_ImplSDL2_ProcessEvent(&e);
             quit = handle_event(&e, render_window, tracer);
