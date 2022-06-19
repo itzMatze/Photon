@@ -16,3 +16,30 @@ bool HitableList::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) co
     }
     return hit_anything;
 }
+
+bool HitableList::bounding_box(Aabb& box) const
+{
+    if (objects->size() < 1) return false;
+    Aabb temp_box;
+    bool first_true = (*objects)[0]->bounding_box(temp_box);
+    if (!first_true)
+    {
+        return false;
+    }
+    else
+    {
+        box = temp_box;
+    }
+    for (int i = 1; i < objects->size(); ++i)
+    {
+        if ((*objects)[i]->bounding_box(temp_box))
+        {
+            box = Aabb(box, temp_box);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return true;
+}

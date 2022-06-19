@@ -10,6 +10,6 @@
 #include "objects/Hitable.h"
 
 void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int channels);
-std::shared_ptr<Hitable> random_scene(RandomGenerator* random_generator);
-std::shared_ptr<Hitable> create_scene();
-std::shared_ptr<Hitable> line_scene();
+std::shared_ptr<HitableList> random_scene(RandomGenerator* random_generator);
+std::shared_ptr<HitableList> create_scene();
+std::shared_ptr<HitableList> line_scene();

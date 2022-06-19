@@ -71,3 +71,12 @@ bool Segment::hit(const Ray& ray, float t_min, float t_max, HitRecord& rec) cons
     }
     return false;
 }
+
+bool Segment::bounding_box(Aabb& box) const
+{
+    glm::vec3 extent = (glm::vec3(radius)) * (glm::vec3(1.0f) - glm::normalize(p1 - p0));
+    glm::vec3 min = glm::min(p0 - extent, p1 - extent);
+    glm::vec3 max = glm::max(p0 + extent, p1 + extent);
+    box = Aabb{min, max};
+    return true;
+}

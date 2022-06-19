@@ -9,7 +9,7 @@ set(SDL2_DIR dependencies/SDL2-2.0.20)
 set(google_test_DIR dependencies/googletest-release-1.11.0)
 
 set(SOURCE_FILES src/RayTracer.cpp src/RandomGenerator.cpp src/Factory.cpp
-        src/objects/Sphere.cpp src/objects/HitableList.cpp src/objects/Segment.cpp
+        src/objects/Sphere.cpp src/objects/HitableList.cpp src/objects/Segment.cpp src/objects/Aabb.cpp src/objects/Bvh.cpp
         src/materials/Lambertian.cpp src/materials/Metal.cpp src/materials/Dielectric.cpp
         src/sdl_window/Color.cpp src/sdl_window/Renderer.cpp
         ${ImGui_dir}/imgui.cpp ${ImGui_dir}/imgui_draw.cpp ${ImGui_dir}/imgui_tables.cpp

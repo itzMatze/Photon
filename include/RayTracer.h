@@ -8,6 +8,7 @@
 #include "sdl_window/Renderer.h"
 #include "Camera.h"
 #include "Factory.h"
+#include "objects/Bvh.h"
 
 #define NUM_THREADS 15
 
@@ -29,7 +30,8 @@ private:
     Camera* cam;
     Renderer* render_window;
     RandomGenerator random_generator;
-    std::shared_ptr<Hitable> world;
+    std::shared_ptr<HitableList> world;
+    std::unique_ptr<BvhNode> bvh;
     std::mutex mutex;
     std::atomic<int> row;
     std::atomic<int> samples;

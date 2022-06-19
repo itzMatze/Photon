@@ -43,7 +43,7 @@ void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int c
     stbi_write_png(path_to_image.string().c_str(), nx, ny, channels, pixels, nx * channels);
 }
 
-std::shared_ptr<Hitable> random_scene(RandomGenerator* random_generator)
+std::shared_ptr<HitableList> random_scene(RandomGenerator* random_generator)
 {
     std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
     std::shared_ptr<Material> silver = std::make_shared<Lambertian>(glm::vec3(0.2f, 0.5f, 0.5f));
@@ -84,7 +84,7 @@ std::shared_ptr<Hitable> random_scene(RandomGenerator* random_generator)
     return std::make_shared<HitableList>(objects);
 }
 
-std::shared_ptr<Hitable> create_scene()
+std::shared_ptr<HitableList> create_scene()
 {
     std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
     // creating a few materials
@@ -102,7 +102,7 @@ std::shared_ptr<Hitable> create_scene()
     return std::make_shared<HitableList>(objects);
 }
 
-std::shared_ptr<Hitable> line_scene()
+std::shared_ptr<HitableList> line_scene()
 {
     std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
     std::shared_ptr<Material> mat = std::make_shared<Lambertian>(glm::vec3(0.1f, 0.8f, 0.8f));

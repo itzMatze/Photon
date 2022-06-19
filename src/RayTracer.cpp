@@ -4,7 +4,7 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
 {
     HitRecord rec;
     // intersection test
-    if (world->hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
+    if (bvh->hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
     {
 #if 1
         Ray scattered = {};
@@ -132,6 +132,7 @@ void RayTracer::trace(const RenderingInfo& r_info)
             std::cout << "Error: Default case in scene loading reached!" << std::endl;
             break;
     }
+    bvh = std::make_unique<BvhNode>(world->objects->begin(), world->objects->end());
     threads_joined = false;
     render_window->clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
     // tells the threads which row to pick next for calculation
