@@ -34,12 +34,14 @@ if (WIN32)
     configure_file("${SDL2_LIBRARIES_DIR}/SDL2.dll" "${CMAKE_BINARY_DIR}/" COPYONLY)
 endif()
 
-enable_testing()
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+        enable_testing()
 
-add_subdirectory(${google_test_DIR} ${CMAKE_BINARY_DIR}/googletest EXCLUDE_FROM_ALL)
+        add_subdirectory(${google_test_DIR} ${CMAKE_BINARY_DIR}/googletest EXCLUDE_FROM_ALL)
 
-add_executable(run_google_test google_test/ColorTest.cpp ${SOURCE_FILES})
-target_link_libraries(run_google_test gtest_main ${SDL2_LIBRARIES})
+        add_executable(run_google_test google_test/ColorTest.cpp ${SOURCE_FILES})
+        target_link_libraries(run_google_test gtest_main ${SDL2_LIBRARIES})
 
-include(GoogleTest)
-gtest_discover_tests(run_google_test)
+        include(GoogleTest)
+        gtest_discover_tests(run_google_test)
+endif()
