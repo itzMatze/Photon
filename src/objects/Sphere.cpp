@@ -2,9 +2,9 @@
 
 bool Sphere::hit(const Ray &r, float t_min, float t_max, HitRecord& rec) const
 {
-    glm::vec3 oc = r.origin - center;
-    float a = glm::dot(r.direction, r.direction);
-    float b = 2.0f * glm::dot(oc, r.direction);
+    glm::vec3 oc = r.origin() - center;
+    float a = glm::dot(r.direction(), r.direction());
+    float b = 2.0f * glm::dot(oc, r.direction());
     float c = glm::dot(oc, oc) - radius * radius;
     float discriminant = b * b - 4 * a * c;
     if (discriminant > 0)

@@ -29,7 +29,7 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
     else
     {
         // if the ray didn't hit anything, paint background, this is also currently the 'light source'
-        glm::vec3 unit_direction = glm::normalize(r.direction);
+        glm::vec3 unit_direction = glm::normalize(r.direction());
         float t = 0.5f * (unit_direction.y + 1.0f);
         return (1.0f - t) * glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) + t * glm::vec4(0.5f, 0.7f, 1.0f, 1.0f);
     }

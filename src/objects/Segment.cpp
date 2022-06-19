@@ -60,7 +60,7 @@ float iSegment(glm::vec3 ro, glm::vec3 rd, glm::vec3 p0, glm::vec3 p1, float thi
 
 bool Segment::hit(const Ray& ray, float t_min, float t_max, HitRecord& rec) const
 {
-    float t = iSegment(ray.origin, ray.direction, p0, p1, radius, t_max + 1.0f);
+    float t = iSegment(ray.origin(), ray.direction(), p0, p1, radius, t_max + 1.0f);
     if (t > t_min && t < t_max)
     {
         rec.t = t;

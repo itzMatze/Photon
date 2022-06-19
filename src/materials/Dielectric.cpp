@@ -3,23 +3,23 @@
 bool Dielectric::scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const
 {
     glm::vec3 outward_normal;
-    glm::vec3 reflected = glm::reflect(r_in.direction, rec.normal);
+    glm::vec3 reflected = glm::reflect(r_in.direction(), rec.normal);
     float ni_over_nt;
     attenuation = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     float cosine;
-    if (glm::dot(r_in.direction, rec.normal) > 0)
+    if (glm::dot(r_in.direction(), rec.normal) > 0)
     {
         outward_normal = -rec.normal;
         ni_over_nt = ref_idx;
-        cosine = ref_idx * glm::dot(r_in.direction, rec.normal) / glm::length(r_in.direction);
+        cosine = ref_idx * glm::dot(r_in.direction(), rec.normal) / glm::length(r_in.direction());
     }
     else
     {
         outward_normal = rec.normal;
         ni_over_nt = 1.0f / ref_idx;
-        cosine = -glm::dot(r_in.direction, rec.normal) / glm::length(r_in.direction);
+        cosine = -glm::dot(r_in.direction(), rec.normal) / glm::length(r_in.direction());
     }
-    glm::vec3 refracted = glm::refract(r_in.direction, outward_normal, ni_over_nt);
+    glm::vec3 refracted = glm::refract(r_in.direction(), outward_normal, ni_over_nt);
     float reflect_prob;
     if (glm::length(refracted) > 0.0f)
     {
