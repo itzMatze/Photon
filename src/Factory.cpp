@@ -46,8 +46,8 @@ void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int c
 std::shared_ptr<HitableList> random_scene(RandomGenerator* random_generator)
 {
     std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
-    std::shared_ptr<Material> silver = std::make_shared<Lambertian>(glm::vec3(0.2f, 0.5f, 0.5f));
-    objects->emplace_back(std::make_shared<Sphere>(glm::vec3(0.0f, -1000.0f, 0.0f), 1000.0f, silver));
+    std::shared_ptr<Material> squared_color = std::make_shared<Lambertian>(std::make_shared<CheckerTexture>(std::make_shared<ConstantTexture>(Color(0.9f, 0.9f, 0.9f)), std::make_shared<ConstantTexture>(Color(0.6f, 0.0f, 0.6f))));
+    objects->emplace_back(std::make_shared<Sphere>(glm::vec3(0.0f, -10000.0f, 0.0f), 10000.0f, squared_color));
     for (int a = -11; a < 11; ++a)
     {
         for (int b = -11; b < 11; ++b)

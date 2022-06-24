@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "HitRecord.h"
 #include "Ray.h"
+#include "Textures.h"
 
 class Material
 {

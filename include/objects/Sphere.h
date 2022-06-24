@@ -1,5 +1,4 @@
-#ifndef RAY_TRACING_IOW_SPHERE_H
-#define RAY_TRACING_IOW_SPHERE_H
+#pragma once
 
 #include <utility>
 
@@ -17,5 +16,3 @@ public:
     float radius;
     std::shared_ptr<Material> mat;
 };
-
-#endif //RAY_TRACING_IOW_SPHERE_H

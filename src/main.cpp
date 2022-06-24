@@ -29,14 +29,14 @@ int main()
 #if 1
     constexpr int nx = 1000;
     constexpr int ny = 800;
-    RenderingInfo r_info{16, 10, 1, true};
+    RenderingInfo r_info{16, 6, 1, true};
 #else
     constexpr int nx = 3840;
     constexpr int ny = 2160;
-    RenderingInfo r_info{128, 20, 1, true};
+    RenderingInfo r_info{128, 12, 1, true};
 #endif
     Camera cam(glm::vec3(0.0f, 1.5f, 0.0f), glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-               90.0f, float(nx) / float(ny), 0.01f, 2.0f);
+               90.0f, float(nx) / float(ny), 0.0001f, 2.0f);
     Renderer render_window(1000, nx, ny);
     // TODO render first in lower resolution and then add resolution (this is probably not so easy)
     RayTracer tracer(&cam, &render_window);
