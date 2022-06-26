@@ -59,7 +59,7 @@ bool BvhNode::hit(const Ray& r, float tmin, float tmax, HitRecord& rec) const
 {
     if (box.hit(r, tmin, tmax))
     {
-        HitRecord left_rec, right_rec;
+        HitRecord left_rec{}, right_rec{};
         bool hit_left = left->hit(r, tmin, tmax, left_rec);
         bool hit_right = right->hit(r, tmin, tmax, right_rec);
         if (hit_left && hit_right)

@@ -2,7 +2,7 @@
 
 glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_depth)
 {
-    HitRecord rec;
+    HitRecord rec{};
     // intersection test
     if (bvh.hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
     {

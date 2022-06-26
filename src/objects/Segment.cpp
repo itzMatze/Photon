@@ -63,9 +63,10 @@ bool Segment::hit(const Ray& ray, float t_min, float t_max, HitRecord& rec) cons
     float t = iSegment(ray.origin(), ray.direction(), p0, p1, radius, t_max + 1.0f);
     if (t > t_min && t < t_max)
     {
-        rec.t = t;
-        rec.p = ray.point_at_parameter(rec.t);
+        rec.p = ray.point_at_parameter(t);
         rec.normal = glm::cross(glm::cross((p1 - p0), (rec.p - p0)), (p1 - p0));
+        rec.uv = glm::vec2(0.0f, 0.0f); // TODO: calculate correct texture coordinates
+        rec.t = t;
         rec.mat = mat.get();
         return true;
     }

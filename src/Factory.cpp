@@ -1,6 +1,8 @@
 #include "Factory.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image_write.h"
+#include "stb_image.h"
 #include "objects/Segment.h"
 
 void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int channels)
@@ -79,7 +81,9 @@ HitableList random_scene(RandomGenerator* random_generator)
     }
     std::shared_ptr<Material> metal_color = std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.001f);
     objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.0f, 2.0f, -2.6f), 1.0f, metal_color));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 1.8f, -3.0f), 1.0f, std::make_shared<Lambertian>(std::make_shared<NoiseTexture>(15.1f, true))));
+    int nx, ny, nn;
+    unsigned char* pixels = stbi_load("../assets/textures/white.png", &nx, &ny, &nn, 0);
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 1.8f, -3.0f), 1.0f, std::make_shared<Lambertian>(std::make_shared<ImageTexture>(pixels, nx, ny, nn))));
     return HitableList(objects);
 }
 

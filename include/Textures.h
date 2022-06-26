@@ -71,3 +71,26 @@ Perlin noise;
 const float freq;
 const bool smooth;
 };
+
+class ImageTexture : public Texture
+{
+public:
+    ImageTexture() = default;
+    ImageTexture(unsigned char* pixels, int x, int y, int n) : data(pixels), nx(x), ny(y), nc(n)
+    {}
+    virtual Color value(float u, float v, const glm::vec3& p) const
+    {
+        int i = u * nx;
+        int j = (1 - v) * ny;
+        i = glm::clamp(i, 0, nx - 1);
+        j = glm::clamp(j, 0, ny - 1);
+        float r = static_cast<int>(data[nc*i + nc*nx*j]) / 255.0f;
+        float g = static_cast<int>(data[nc*i + nc*nx*j + 1]) / 255.0f;
+        float b = static_cast<int>(data[nc*i + nc*nx*j + 2]) / 255.0f;
+        return Color(r, g, b);
+    }
+
+private:
+    unsigned char* data;
+    int nx, ny, nc;
+};
