@@ -4,7 +4,7 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
 {
     HitRecord rec;
     // intersection test
-    if (bvh->hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
+    if (bvh.hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
     {
 #if 1
         Ray scattered = {};
@@ -42,22 +42,22 @@ void RayTracer::calculate_pixel_rows(const int ns, const int max_depth)
     for (int j = row--; j >= 0; j = row--)
     {
         // iterate through the pixels of the row
-        for (int i = 0; i < render_window->render_width; ++i)
+        for (int i = 0; i < render_window.render_width; ++i)
         {
             Color color(0.0f, 0.0f, 0.0f);
             // number of samples
             for (int s = 0; s < ns; ++s)
             {
-                float u = (float(i) + random_generator.random_num()) / float(render_window->render_width);
-                float v = (float(j) + random_generator.random_num()) / float(render_window->render_height);
-                Ray r = cam->get_ray(u, v, &random_generator);
+                float u = (float(i) + random_generator.random_num()) / float(render_window.render_width);
+                float v = (float(j) + random_generator.random_num()) / float(render_window.render_height);
+                Ray r = cam.get_ray(u, v, &random_generator);
                 // shoot ray
                 color.values += calculate_color(r, 0, max_depth);
                 // keep the system responsive
                 std::this_thread::yield();
             }
             color.values /= float(ns);
-            render_window->set_pixel(i, render_window->render_height - j - 1, color);
+            render_window.set_pixel(i, render_window.render_height - j - 1, color);
         }
     }
     samples = ns + 1;
@@ -77,14 +77,14 @@ void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_dep
             // and then overtakes the first thread, but this should really never happen (we need either very few rows or lots of threads)
             s = samples.load();
             // iterate through the pixels of the row
-            for (int i = 0; i < render_window->render_width; ++i)
+            for (int i = 0; i < render_window.render_width; ++i)
             {
                 Color color;
-                Color pixel_color = render_window->get_pixel(i, render_window->render_height - j - 1);
+                Color pixel_color = render_window.get_pixel(i, render_window.render_height - j - 1);
                 // number of samples
-                float u = (float(i) + random_generator.random_num()) / float(render_window->render_width);
-                float v = (float(j) + random_generator.random_num()) / float(render_window->render_height);
-                Ray r = cam->get_ray(u, v, &random_generator);
+                float u = (float(i) + random_generator.random_num()) / float(render_window.render_width);
+                float v = (float(j) + random_generator.random_num()) / float(render_window.render_height);
+                Ray r = cam.get_ray(u, v, &random_generator);
                 // shoot ray
                 color.values += calculate_color(r, 0, max_depth);
                 // keep the system responsive
@@ -93,7 +93,7 @@ void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_dep
                 color.values /= float(s);
                 pixel_color.values *= (float(s - 1) / float(s));
                 color.values += pixel_color.values;
-                render_window->set_pixel(i, render_window->render_height - j - 1, color);
+                render_window.set_pixel(i, render_window.render_height - j - 1, color);
             }
         }
         std::unique_lock<std::mutex> locker(mutex, std::defer_lock);
@@ -104,7 +104,7 @@ void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_dep
             // also, no reset if the sample_count is reached (threads get locked in the *row for loop if this doesn't get checked)
             if (++samples <= ns)
             {
-                row = render_window->render_height - 1;
+                row = render_window.render_height - 1;
                 std::cout << "Remaining samples: " << ns - samples << std::endl;
             }
         }
@@ -132,11 +132,11 @@ void RayTracer::trace(const RenderingInfo& r_info)
             std::cout << "Error: Default case in scene loading reached!" << std::endl;
             break;
     }
-    bvh = std::make_unique<BvhNode>(world->objects->begin(), world->objects->end());
+    bvh = BvhNode(world.objects.begin(), world.objects.end());
     threads_joined = false;
-    render_window->clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
+    render_window.clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
     // tells the threads which row to pick next for calculation
-    row = render_window->render_height - 1;
+    row = render_window.render_height - 1;
     // and how many sample iterations are left
     samples = 1;
     for (auto& t: threads)

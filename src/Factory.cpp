@@ -43,11 +43,11 @@ void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int c
     stbi_write_png(path_to_image.string().c_str(), nx, ny, channels, pixels, nx * channels);
 }
 
-std::shared_ptr<HitableList> random_scene(RandomGenerator* random_generator)
+HitableList random_scene(RandomGenerator* random_generator)
 {
-    std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
+    std::vector<std::shared_ptr<Hitable>> objects;
     std::shared_ptr<Material> squared_color = std::make_shared<Lambertian>(std::make_shared<CheckerTexture>(std::make_shared<ConstantTexture>(Color(0.9f, 0.9f, 0.9f)), std::make_shared<ConstantTexture>(Color(0.6f, 0.0f, 0.6f))));
-    objects->emplace_back(std::make_shared<Sphere>(glm::vec3(0.0f, -10000.0f, 0.0f), 10000.0f, squared_color));
+    objects.emplace_back(std::make_shared<Sphere>(glm::vec3(0.0f, -10000.0f, 0.0f), 10000.0f, std::make_shared<Lambertian>(std::make_shared<NoiseTexture>(0.1f, true))));
     for (int a = -11; a < 11; ++a)
     {
         for (int b = -11; b < 11; ++b)
@@ -61,32 +61,31 @@ std::shared_ptr<HitableList> random_scene(RandomGenerator* random_generator)
                     std::shared_ptr<Material> color = std::make_shared<Lambertian>(
                             glm::vec3(glm::max(random_generator->random_num(), 0.2f), glm::max(random_generator->random_num(), 0.2f),
                                       glm::max(random_generator->random_num(), 0.2f)));
-                    objects->push_back(std::make_shared<Sphere>(center, 0.2f, color));
+                    objects.push_back(std::make_shared<Sphere>(center, 0.2f, color));
                 }
                 else if (choose_mat < 0.95f)
                 {
                     std::shared_ptr<Material> color = std::make_shared<Metal>(glm::vec3(glm::max(random_generator->random_num(), 0.2f), glm::max(random_generator->random_num(), 0.2f),
                                                        glm::max(random_generator->random_num(), 0.2f)), 0.3f * random_generator->random_num());
-                    objects->push_back(std::make_shared<Sphere>(center, 0.2f, color));
+                    objects.push_back(std::make_shared<Sphere>(center, 0.2f, color));
                 }
                 else
                 {
                     std::shared_ptr<Material> color = std::make_shared<Dielectric>(1.5f);
-                    objects->push_back(std::make_shared<Sphere>(center, 0.2f, color));
+                    objects.push_back(std::make_shared<Sphere>(center, 0.2f, color));
                 }
             }
         }
     }
-    std::shared_ptr<Material> color = std::make_shared<Lambertian>(glm::vec3(0.1f, 0.8f, 0.9f));
     std::shared_ptr<Material> metal_color = std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.001f);
-    objects->push_back(std::make_shared<Sphere>(glm::vec3(-1.0f, 2.0f, -2.6f), 1.0f, metal_color));
-    objects->push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 1.8f, -3.0f), 1.0f, color));
-    return std::make_shared<HitableList>(objects);
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.0f, 2.0f, -2.6f), 1.0f, metal_color));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 1.8f, -3.0f), 1.0f, std::make_shared<Lambertian>(std::make_shared<NoiseTexture>(15.1f, true))));
+    return HitableList(objects);
 }
 
-std::shared_ptr<HitableList> create_scene()
+HitableList create_scene()
 {
-    std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
+    std::vector<std::shared_ptr<Hitable>> objects;
     // creating a few materials
     std::shared_ptr<Material> lambertian_1 = std::make_shared<Lambertian>(glm::vec3(0.5f, 0.1f, 0.7f));
     std::shared_ptr<Material> lambertian_2 = std::make_shared<Lambertian>(glm::vec3(0.1f, 0.8f, 0.8f));
@@ -94,27 +93,27 @@ std::shared_ptr<HitableList> create_scene()
     std::shared_ptr<Material> gold = std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
     std::shared_ptr<Material> glass = std::make_shared<Dielectric>(1.5f);
     // creating the spheres
-    objects->push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -2.0f), 0.5f, lambertian_1));
-    objects->push_back(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -2.0f), 100.0f, lambertian_2));
-    objects->push_back(std::make_shared<Sphere>(glm::vec3(1.1f, 0.0f, -2.0f), 0.5f, glass));
-    objects->push_back(std::make_shared<Sphere>(glm::vec3(-1.1f, 0.0f, -2.0f), 0.5f, gold));
-    objects->push_back(std::make_shared<Sphere>(glm::vec3(0.3f, -0.3f, -1.1f), 0.2f, silver));
-    return std::make_shared<HitableList>(objects);
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -2.0f), 0.5f, lambertian_1));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -2.0f), 100.0f, lambertian_2));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(1.1f, 0.0f, -2.0f), 0.5f, glass));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.1f, 0.0f, -2.0f), 0.5f, gold));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.3f, -0.3f, -1.1f), 0.2f, silver));
+    return HitableList(objects);
 }
 
-std::shared_ptr<HitableList> line_scene()
+HitableList line_scene()
 {
-    std::shared_ptr<std::vector<std::shared_ptr<Hitable>>> objects = std::make_shared<std::vector<std::shared_ptr<Hitable>>>();
+    std::vector<std::shared_ptr<Hitable>> objects;
     std::shared_ptr<Material> mat = std::make_shared<Lambertian>(glm::vec3(0.1f, 0.8f, 0.8f));
     std::shared_ptr<Material> silver = std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.01f);
     std::shared_ptr<Material> gold = std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
     glm::vec3 p0, p1;
     p0 = glm::vec3(1.0f, 3.0f, -3.0f);
     p1 = glm::vec3(-1.0f, -1.0f, -4.0f);
-    objects->push_back(std::make_shared<Segment>(p0, p1, 0.2f, silver));
+    objects.push_back(std::make_shared<Segment>(p0, p1, 0.2f, silver));
     p0 = glm::vec3(1.5f, 3.0f, -2.0f);
     p1 = glm::vec3(-0.5f, -1.0f, -3.0f);
-    objects->push_back(std::make_shared<Segment>(p0, p1, 0.2f, gold));
-    objects->push_back(std::make_shared<Sphere>(glm::vec3(-1.3f, 1.3f, -2.1f), 0.6f, mat));
-    return std::make_shared<HitableList>(objects);
+    objects.push_back(std::make_shared<Segment>(p0, p1, 0.2f, gold));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.3f, 1.3f, -2.1f), 0.6f, mat));
+    return HitableList(objects);
 }

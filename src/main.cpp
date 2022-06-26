@@ -39,7 +39,7 @@ int main()
                90.0f, float(nx) / float(ny), 0.0001f, 2.0f);
     Renderer render_window(1000, nx, ny);
     // TODO render first in lower resolution and then add resolution (this is probably not so easy)
-    RayTracer tracer(&cam, &render_window);
+    RayTracer tracer(cam, render_window);
     tracer.trace(r_info);
     // render loop
     bool save = false;
