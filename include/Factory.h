@@ -2,9 +2,7 @@
 
 #include <filesystem>
 
-#include "materials/Dielectric.h"
-#include "materials/Metal.h"
-#include "materials/Lambertian.h"
+#include "Materials.h"
 #include "objects/Sphere.h"
 #include "objects/HitableList.h"
 #include "objects/Hitable.h"
