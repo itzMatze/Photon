@@ -2,10 +2,10 @@
 
 RandomGenerator::RandomGenerator()
 {
-    std::random_device rd;
-    std::uniform_real_distribution<float> dis(0, 20000);
-    generator = std::default_random_engine(dis(rd));
-    distribution = std::uniform_real_distribution<float>(0, 1);
+    //std::random_device rd;
+    //std::uniform_real_distribution<float> dis(0, 20000);
+    distribution = std::uniform_real_distribution<float>(0.0f, 1.0f);
+    generator = std::mt19937(0/*dis(rd)*/);
 }
 
 glm::vec3 RandomGenerator::random_in_unit_sphere()

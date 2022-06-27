@@ -15,5 +15,5 @@ public:
 
 private:
     std::uniform_real_distribution<float> distribution;
-    std::default_random_engine generator;
+    std::mt19937 generator;
 };

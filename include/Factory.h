@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "Materials.h"
+#include "Lights.h"
 #include "objects/Sphere.h"
 #include "objects/HitableList.h"
 #include "objects/Hitable.h"

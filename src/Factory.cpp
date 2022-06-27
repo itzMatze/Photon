@@ -49,7 +49,7 @@ HitableList random_scene(RandomGenerator* random_generator)
 {
     std::vector<std::shared_ptr<Hitable>> objects;
     std::shared_ptr<Material> squared_color = std::make_shared<Lambertian>(std::make_shared<CheckerTexture>(std::make_shared<ConstantTexture>(Color(0.9f, 0.9f, 0.9f)), std::make_shared<ConstantTexture>(Color(0.6f, 0.0f, 0.6f))));
-    objects.emplace_back(std::make_shared<Sphere>(glm::vec3(0.0f, -10000.0f, 0.0f), 10000.0f, std::make_shared<Lambertian>(std::make_shared<NoiseTexture>(0.1f, true))));
+    objects.emplace_back(std::make_shared<Sphere>(glm::vec3(0.0f, -10000.0f, 0.0f), 10000.0f, std::make_shared<DiffuseLight>(std::make_shared<NoiseTexture>(0.1f, true))));
     for (int a = -11; a < 11; ++a)
     {
         for (int b = -11; b < 11; ++b)
@@ -97,11 +97,11 @@ HitableList create_scene()
     std::shared_ptr<Material> gold = std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
     std::shared_ptr<Material> glass = std::make_shared<Dielectric>(1.5f);
     // creating the spheres
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -2.0f), 0.5f, lambertian_1));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -2.0f), 100.0f, lambertian_2));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(1.1f, 0.0f, -2.0f), 0.5f, glass));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.1f, 0.0f, -2.0f), 0.5f, gold));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.3f, -0.3f, -1.1f), 0.2f, silver));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -2.5f), 0.5f, lambertian_1));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -2.5f), 100.0f, lambertian_2));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(1.1f, 0.0f, -2.5f), 0.5f, glass));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.1f, 0.0f, -2.5f), 0.5f, gold));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 9.0f, -3.0f), 6.6f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(4.0f, 4.0f, 4.0f)))));
     return HitableList(objects);
 }
 
@@ -119,5 +119,6 @@ HitableList line_scene()
     p1 = glm::vec3(-0.5f, -1.0f, -3.0f);
     objects.push_back(std::make_shared<Segment>(p0, p1, 0.2f, gold));
     objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.3f, 1.3f, -2.1f), 0.6f, mat));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(6.8f, 1.3f, -2.2f), 5.6f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(4.0f, 4.0f, 4.0f)))));
     return HitableList(objects);
 }

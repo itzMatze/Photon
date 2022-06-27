@@ -2,6 +2,10 @@
 
 glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_depth)
 {
+    if (depth >= max_depth)
+    {
+        return glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
     HitRecord rec{};
     // intersection test
     if (bvh.hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
@@ -11,15 +15,15 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
         glm::vec4 attenuation;
         // TODO attenuation should be calculated with phong when adding lights later on
         // TODO after adding lights and calculating the surface color with phong, add hard shadows
-        // TODO probably add ability to send more than one scattered rays
         // calculate a material dependent random scattered ray and trace it to get indirect lighting
-        if (depth < max_depth && rec.mat->scatter(r, rec, attenuation, &random_generator, scattered))
+        Color emitted = rec.mat->emitted(rec.uv, rec.p);
+        if (rec.mat->scatter(r, rec, attenuation, &random_generator, scattered))
         {
-            return attenuation * calculate_color(scattered, ++depth, max_depth);
+            return emitted.values + attenuation * calculate_color(scattered, ++depth, max_depth);
         }
         else
         {
-            return glm::vec4{0.0f, 0.0f, 0.0f, 1.0f};
+            return emitted.values;
         }
 #else
         // visualization of normals
@@ -29,9 +33,9 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
     else
     {
         // if the ray didn't hit anything, paint background, this is also currently the 'light source'
-        glm::vec3 unit_direction = glm::normalize(r.direction());
-        float t = 0.5f * (unit_direction.y + 1.0f);
-        return /*(1.0f - t) * */glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)/* + t * glm::vec4(0.5f, 0.7f, 1.0f, 1.0f)*/;
+        //glm::vec3 unit_direction = glm::normalize(r.direction());
+        //float t = 0.5f * (unit_direction.y + 1.0f);
+        return /*(1.0f - t) * */glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)/* + t * glm::vec4(0.5f, 0.7f, 1.0f, 1.0f)*/;
     }
 }
 
@@ -41,7 +45,7 @@ void RayTracer::calculate_pixel_rows(const int ns, const int max_depth)
     // as long as there are rows left, take one and calculate it
     for (int j = row--; j >= 0; j = row--)
     {
-        // iterate through the pixels of the row
+        // iterate over the pixels of the row
         for (int i = 0; i < render_window.render_width; ++i)
         {
             Color color(0.0f, 0.0f, 0.0f);
@@ -53,17 +57,16 @@ void RayTracer::calculate_pixel_rows(const int ns, const int max_depth)
                 Ray r = cam.get_ray(u, v, &random_generator);
                 // shoot ray
                 color.values += calculate_color(r, 0, max_depth);
-                // keep the system responsive
-                std::this_thread::yield();
             }
             color.values /= float(ns);
             render_window.set_pixel(i, render_window.render_height - j - 1, color);
         }
     }
-    samples = ns + 1;
 }
 
 // render scene incrementally and accumulate samples, more synchronisation overhead and thus a little slower
+// TODO: something is broke in incremental rendering. The result looks different from normal rendering.
+//  Does not change if only using 1 thread, so no multithreading problem
 void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_depth)
 {
     // s is our sample count for the current row, if row gets reset there was no row left, so we take the sample count for the next iteration
@@ -76,23 +79,19 @@ void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_dep
             // we get in trouble if two threads are calculating the same row but for a different sample count
             // and then overtakes the first thread, but this should really never happen (we need either very few rows or lots of threads)
             s = samples.load();
+            Color color, pixel_color;
             // iterate through the pixels of the row
             for (int i = 0; i < render_window.render_width; ++i)
             {
-                Color color;
-                Color pixel_color = render_window.get_pixel(i, render_window.render_height - j - 1);
                 // number of samples
                 float u = (float(i) + random_generator.random_num()) / float(render_window.render_width);
                 float v = (float(j) + random_generator.random_num()) / float(render_window.render_height);
                 Ray r = cam.get_ray(u, v, &random_generator);
                 // shoot ray
-                color.values += calculate_color(r, 0, max_depth);
-                // keep the system responsive
-                std::this_thread::yield();
+                color.values = calculate_color(r, 0, max_depth);
                 // calculate relative weight of pixel_color and new calculated color sample
-                color.values /= float(s);
-                pixel_color.values *= (float(s - 1) / float(s));
-                color.values += pixel_color.values;
+                pixel_color = render_window.get_pixel(i, render_window.render_height - j - 1);
+                color.values = glm::mix(color.values, pixel_color.values, (double(s - 1) / double(s)));
                 render_window.set_pixel(i, render_window.render_height - j - 1, color);
             }
         }
