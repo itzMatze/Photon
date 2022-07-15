@@ -26,12 +26,12 @@ Color::Color(float r, float g, float b, float a) : values(glm::vec4(r, g, b, a))
 uint32_t Color::get_hex_color() const
 {
     // color values > 1.0 are allowed, but they need to be limited when the color gets converted to hex representation
-    uint32_t color = glm::clamp(static_cast<int>(values.a * 255.5f), 0, 255);
+    uint32_t color = glm::clamp(static_cast<int>(values.a * 255.9f), 0, 255);
     color <<= 8;
-    color += glm::clamp(static_cast<int>(values.b * 255.5f), 0, 255);
+    color += glm::clamp(static_cast<int>(values.b * 255.999f), 0, 255);
     color <<= 8;
-    color += glm::clamp(static_cast<int>(values.g * 255.5f), 0, 255);
+    color += glm::clamp(static_cast<int>(values.g * 255.999f), 0, 255);
     color <<= 8;
-    color += glm::clamp(static_cast<int>(values.r * 255.5f), 0, 255);
+    color += glm::clamp(static_cast<int>(values.r * 255.999f), 0, 255);
     return color;
 }

@@ -3,9 +3,11 @@
 #define imgui_height 500
 #define imgui_width 400
 
-Renderer::Renderer(int width, int render_width, int render_height) : render_width(render_width),
-                                                                     render_height(render_height)
+Renderer::Renderer(int width, const int render_width, const int render_height, const bool use_surface) : 
+render_width(render_width), render_height(render_height), use_surface(use_surface)
 {
+    surface = std::vector<std::vector<glm::vec4>>(render_width, std::vector<glm::vec4>(render_height, glm::vec4(0.0f)));
+
     SDL_Init(SDL_INIT_EVERYTHING);
 
     win = SDL_CreateWindow("Ray tracing", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width,
@@ -20,7 +22,7 @@ Renderer::Renderer(int width, int render_width, int render_height) : render_widt
     clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
 
     imgui_win = SDL_CreateWindow("ImGui", 0, 300, imgui_width,
-                                 imgui_height, SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS | SDL_WINDOW_ALLOW_HIGHDPI);
+                                 imgui_height, SDL_WINDOW_OPENGL /*| SDL_WINDOW_BORDERLESS*/ | SDL_WINDOW_ALLOW_HIGHDPI);
     imgui_sdl_renderer = SDL_CreateRenderer(imgui_win, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
@@ -56,6 +58,7 @@ void Renderer::clean_surface(Color color)
         for (int j = 0; j < render_height; ++j)
         {
             set_pixel(i, j, color);
+            if (use_surface) surface[i][j] = color.values;
         }
     }
 }
@@ -70,7 +73,7 @@ bool Renderer::render_frame(RenderingInfo& r_info, bool& save)
         {
             imgui_win = SDL_CreateWindow("ImGui", 0, 300, imgui_width,
                                          imgui_height,
-                                         SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS | SDL_WINDOW_ALLOW_HIGHDPI);
+                                         SDL_WINDOW_OPENGL /*| SDL_WINDOW_BORDERLESS*/ | SDL_WINDOW_ALLOW_HIGHDPI);
             imgui_sdl_renderer = SDL_CreateRenderer(imgui_win, -1,
                                                     SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
             ImGui_ImplSDL2_InitForSDLRenderer(imgui_win, imgui_sdl_renderer);
@@ -143,8 +146,8 @@ const void* Renderer::get_pixels()
     return bitmap_surface->pixels;
 }
 
-Color Renderer::get_pixel(int x, int y) const
+glm::vec4 Renderer::get_pixel(int x, int y) const
 {
     assert(x < render_width && y < render_height);
-    return {((uint32_t*) (bitmap_surface->pixels))[x + render_width * y]};
+    return use_surface ? surface[x][y] : Color(((uint32_t*) (bitmap_surface->pixels))[x + render_width * y]).values;
 }

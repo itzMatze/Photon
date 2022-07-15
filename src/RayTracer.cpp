@@ -90,7 +90,7 @@ void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_dep
                 // shoot ray
                 color.values = calculate_color(r, 0, max_depth);
                 // calculate relative weight of pixel_color and new calculated color sample
-                pixel_color = render_window.get_pixel(i, render_window.render_height - j - 1);
+                pixel_color.values = render_window.get_pixel(i, render_window.render_height - j - 1);
                 color.values = glm::mix(color.values, pixel_color.values, (double(s - 1) / double(s)));
                 render_window.set_pixel(i, render_window.render_height - j - 1, color);
             }
@@ -138,6 +138,7 @@ void RayTracer::trace(const RenderingInfo& r_info)
     row = render_window.render_height - 1;
     // and how many sample iterations are left
     samples = 1;
+    render_window.set_use_surface(r_info.incremental);
     for (auto& t: threads)
     {
         t = std::thread((r_info.incremental ? &RayTracer::calculate_pixel_rows_incremental
