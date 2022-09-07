@@ -1,14 +1,13 @@
 #include "RayTracer.h"
 
-glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_depth, RandomGenerator* random_generator)
+glm::vec4 RayTracer::calculate_color(const Ray& r, RayPayload& rp, const int max_depth, RandomGenerator* random_generator)
 {
-    if (depth >= max_depth)
+    if (rp.depth >= max_depth)
     {
         return glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     }
-    HitRecord rec{};
     // intersection test
-    if (bvh.hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
+    if (bvh.hit(r, 0.001f, std::numeric_limits<float>::max(), rp))
     {
 #if 1
         Ray scattered = {};
@@ -16,10 +15,11 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
         // TODO attenuation should be calculated with phong when adding lights later on
         // TODO after adding lights and calculating the surface color with phong, add hard shadows
         // calculate a material dependent random scattered ray and trace it to get indirect lighting
-        Color emitted = rec.mat->emitted(rec.uv, rec.p);
-        if (rec.mat->scatter(r, rec, attenuation, random_generator, scattered))
+        Color emitted = rp.mat->emitted(rp.uv, rp.p);
+        if (rp.mat->scatter(r, rp, attenuation, random_generator, scattered))
         {
-            return emitted.values + attenuation * calculate_color(scattered, ++depth, max_depth, random_generator);
+            rp.depth++;
+            return emitted.values + attenuation * calculate_color(scattered, rp, max_depth, random_generator);
         }
         else
         {
@@ -27,7 +27,7 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
         }
 #else
         // visualization of normals
-        return 0.5f * glm::vec4(rec.normal.x + 1, rec.normal.y + 1, rec.normal.z + 1, 1.0f);
+        return 0.5f * glm::vec4(rp.normal.x + 1, rp.normal.y + 1, rp.normal.z + 1, 1.0f);
 #endif
     }
     else
@@ -40,7 +40,7 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, int depth, const int max_dept
 }
 
 // render all samples at once, due to the missing synchronisation stuff this is a little faster
-void RayTracer::calculate_pixel_rows(const int ns, const int max_depth)
+void RayTracer::calculate_pixel_rows(const RenderingInfo r_info)
 {
     RandomGenerator random_generator;
     // as long as there are rows left, take one and calculate it
@@ -51,15 +51,16 @@ void RayTracer::calculate_pixel_rows(const int ns, const int max_depth)
         {
             Color color(0.0f, 0.0f, 0.0f);
             // number of samples
-            for (int s = 0; s < ns; ++s)
+            for (int s = 0; s < r_info.ns; ++s)
             {
+                RayPayload rp(0, r_info.spectral ? static_cast<uint32_t>(random_generator.random_num() * 400.0f + 380.0f) : 0);
                 float u = (float(i) + random_generator.random_num()) / float(render_window.render_width);
                 float v = (float(j) + random_generator.random_num()) / float(render_window.render_height);
                 Ray r = cam.get_ray(u, v, &random_generator);
                 // shoot ray
-                color.values += calculate_color(r, 0, max_depth, &random_generator);
+                color.values += r_info.spectral ? (Color::wavelength_to_rgba(rp.wavelength) * calculate_color(r, rp, r_info.max_depth, &random_generator)) : calculate_color(r, rp, r_info.max_depth, &random_generator);
             }
-            color.values /= float(ns);
+            color.values /= float(r_info.ns);
             render_window.set_pixel(i, render_window.render_height - j - 1, color);
         }
     }
@@ -68,12 +69,12 @@ void RayTracer::calculate_pixel_rows(const int ns, const int max_depth)
 // render scene incrementally and accumulate samples, more synchronisation overhead and thus a little slower
 // TODO: something is broke in incremental rendering. The result looks different from normal rendering.
 //  Does not change if only using 1 thread, so no multithreading problem
-void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_depth)
+void RayTracer::calculate_pixel_rows_incremental(const RenderingInfo r_info)
 {
     RandomGenerator random_generator;
     // s is our sample count for the current row, if row gets reset there was no row left, so we take the sample count for the next iteration
     // this needs to be done here and inside the next loop, because not all threads get outside of the next loop, only one resets row
-    for (int s = samples.load(); s <= ns; s = samples.load())
+    for (int s = samples.load(); s <= r_info.ns; s = samples.load())
     {
         // as long as there are rows left, take one and calculate it
         for (int j = row--; j >= 0; j = row--)
@@ -85,12 +86,13 @@ void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_dep
             // iterate through the pixels of the row
             for (int i = 0; i < render_window.render_width; ++i)
             {
+                RayPayload rp(0, r_info.spectral ? static_cast<uint32_t>(random_generator.random_num() * 400.0f + 380.0f) : 0);
                 // number of samples
                 float u = (float(i) + random_generator.random_num()) / float(render_window.render_width);
                 float v = (float(j) + random_generator.random_num()) / float(render_window.render_height);
                 Ray r = cam.get_ray(u, v, &random_generator);
                 // shoot ray
-                color.values = calculate_color(r, 0, max_depth, &random_generator);
+                color.values = r_info.spectral ? (Color::wavelength_to_rgba(rp.wavelength) * calculate_color(r, rp, r_info.max_depth, &random_generator)) : calculate_color(r, rp, r_info.max_depth, &random_generator);
                 // calculate relative weight of pixel_color and new calculated color sample
                 pixel_color.values = render_window.get_pixel(i, render_window.render_height - j - 1);
                 color.values = glm::mix(color.values, pixel_color.values, (double(s - 1) / double(s)));
@@ -103,10 +105,10 @@ void RayTracer::calculate_pixel_rows_incremental(const int ns, const int max_dep
         if (row < 0)
         {
             // also, no reset if the sample_count is reached (threads get locked in the *row for loop if this doesn't get checked)
-            if (++samples <= ns)
+            if (++samples <= r_info.ns)
             {
                 row = render_window.render_height - 1;
-                std::cout << "Remaining samples: " << ns - samples << std::endl;
+                std::cout << "Remaining samples: " << r_info.ns - samples << std::endl;
             }
         }
         locker.unlock();
@@ -144,7 +146,7 @@ void RayTracer::trace(const RenderingInfo& r_info)
     for (auto& t: threads)
     {
         t = std::thread((r_info.incremental ? &RayTracer::calculate_pixel_rows_incremental
-                                            : &RayTracer::calculate_pixel_rows), this, r_info.ns, r_info.max_depth);
+                                            : &RayTracer::calculate_pixel_rows), this, r_info);
     }
 }
 

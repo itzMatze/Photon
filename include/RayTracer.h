@@ -23,9 +23,9 @@ public:
     void stop();
 
 private:
-    glm::vec4 calculate_color(const Ray& r, int depth, const int max_depth, RandomGenerator* random_generator);
-    void calculate_pixel_rows(const int ns, const int max_depth);
-    void calculate_pixel_rows_incremental(const int ns, const int max_depth);
+    glm::vec4 calculate_color(const Ray& r, RayPayload& rp, const int max_depth, RandomGenerator* random_generator);
+    void calculate_pixel_rows(const RenderingInfo r_info);
+    void calculate_pixel_rows_incremental(const RenderingInfo r_info);
 
     Camera& cam;
     Renderer& render_window;

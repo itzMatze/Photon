@@ -27,13 +27,13 @@ bool handle_event(SDL_Event* e, Renderer& render_window, RayTracer& tracer)
 int main()
 {
 #if 1
-    constexpr int nx = 1000;
-    constexpr int ny = 800;
-    RenderingInfo r_info{16, 6, 1, true};
+    constexpr int nx = 800;
+    constexpr int ny = 500;
+    RenderingInfo r_info{1024, 6, 2, true, true};
 #else
     constexpr int nx = 3840;
     constexpr int ny = 2160;
-    RenderingInfo r_info{128, 12, 1, true};
+    RenderingInfo r_info{4096, 8, 1, true, true};
 #endif
     Camera cam(glm::vec3(0.0f, 1.5f, 0.0f), glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 1.0f, 0.0f),
                90.0f, float(nx) / float(ny), 0.0001f, 2.0f);

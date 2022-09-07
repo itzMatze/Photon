@@ -13,10 +13,14 @@
 
 struct RenderingInfo
 {
+    RenderingInfo(int ns, int max_depth, int scene_index, bool incremental, bool spectral) :
+        ns(ns), max_depth(max_depth), scene_index(scene_index), incremental(incremental), spectral(spectral)
+    {}
     int ns;
     int max_depth;
     int scene_index;
     bool incremental;
+    bool spectral;
 };
 
 class Renderer

@@ -55,33 +55,33 @@ bool BvhNode::bounding_box(Aabb& b) const
     return true;
 }
 
-bool BvhNode::hit(const Ray& r, float tmin, float tmax, HitRecord& rec) const
+bool BvhNode::hit(const Ray& r, float tmin, float tmax, RayPayload& rp) const
 {
     if (box.hit(r, tmin, tmax))
     {
-        HitRecord left_rec{}, right_rec{};
+        RayPayload left_rec(rp.depth, rp.wavelength), right_rec(rp.depth, rp.wavelength);
         bool hit_left = left->hit(r, tmin, tmax, left_rec);
         bool hit_right = right->hit(r, tmin, tmax, right_rec);
         if (hit_left && hit_right)
         {
             if (left_rec.t < right_rec.t)
             {
-                rec = left_rec;
+                rp = left_rec;
             }
             else
             {
-                rec = right_rec;
+                rp = right_rec;
             }
             return true;
         }
         else if (hit_left)
         {
-            rec = left_rec;
+            rp = left_rec;
             return true;
         }
         else if (hit_right)
         {
-            rec = right_rec;
+            rp = right_rec;
             return true;
         }
     }

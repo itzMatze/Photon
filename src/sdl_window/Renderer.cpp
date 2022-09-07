@@ -110,9 +110,13 @@ bool Renderer::render_frame(RenderingInfo& r_info, bool& save)
         {
             r_info.scene_index = 3;
         }
-        if (ImGui::Button(r_info.incremental ? "Render incrementally: true" : "Render incrementally: false"))
+        if (ImGui::Button(r_info.incremental ? "incrementally: true" : "incrementally: false"))
         {
             r_info.incremental = !r_info.incremental;
+        }
+        if (ImGui::Button(r_info.spectral ? "spectral: true" : "spectral: false"))
+        {
+            r_info.spectral = !r_info.spectral;
         }
         ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(0, 100, 0, 255));
         if (ImGui::Button("Apply"))

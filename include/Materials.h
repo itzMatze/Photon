@@ -2,14 +2,14 @@
 
 #include "RandomGenerator.h"
 #include "glm/glm.hpp"
-#include "HitRecord.h"
+#include "RayPayload.h"
 #include "Ray.h"
 #include "Textures.h"
 
 class Material
 {
 public:
-    virtual bool scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const = 0;
+    virtual bool scatter(const Ray& r_in, const RayPayload& rp, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const = 0;
     virtual Color emitted(glm::vec2& uv, const glm::vec3& p) const
     {
         return Color(0.0f, 0.0f, 0.0f);
@@ -22,7 +22,7 @@ public:
     explicit Dielectric(float ri) : ref_idx(ri)
     {}
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override;
+    bool scatter(const Ray& r_in, const RayPayload& rp, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override;
 
 private:
     static float reflectance(float cosine, float ref_idx);
@@ -40,7 +40,7 @@ public:
         albedo = std::make_shared<ConstantTexture>(Color(a.x, a.y, a.z));
     }
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override;
+    bool scatter(const Ray& r_in, const RayPayload& rp, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override;
 
     std::shared_ptr<Texture> albedo;
 };
@@ -57,7 +57,7 @@ public:
         this->fuzz = fuzz < 1 ? fuzz : 1.0f;
     }
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override;
+    bool scatter(const Ray& r_in, const RayPayload& rp, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override;
 
     std::shared_ptr<Texture> albedo;
     float fuzz;

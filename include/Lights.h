@@ -12,7 +12,7 @@ public:
         emit = std::make_shared<ConstantTexture>(Color(a.x, a.y, a.z));
     }
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override
+    bool scatter(const Ray& r_in, const RayPayload& rp, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override
     {
         return false;
     }

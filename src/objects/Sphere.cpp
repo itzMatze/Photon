@@ -1,6 +1,6 @@
 #include "objects/Sphere.h"
 
-bool Sphere::hit(const Ray &r, float t_min, float t_max, HitRecord& rec) const
+bool Sphere::hit(const Ray &r, float t_min, float t_max, RayPayload& rp) const
 {
     glm::vec3 oc = r.origin() - center;
     float a = glm::dot(r.direction(), r.direction());
@@ -12,21 +12,21 @@ bool Sphere::hit(const Ray &r, float t_min, float t_max, HitRecord& rec) const
         float temp = (-b - sqrt(b * b - 4 * a * c)) / (2.0f * a);
         if (temp < t_max && temp > t_min)
         {
-            rec.p = r.point_at_parameter(temp);
-            rec.normal = (rec.p - center) / radius;
-            rec.uv = get_uv((rec.p - center) / radius);
-            rec.t = temp;
-            rec.mat = mat.get();
+            rp.p = r.point_at_parameter(temp);
+            rp.normal = (rp.p - center) / radius;
+            rp.uv = get_uv((rp.p - center) / radius);
+            rp.t = temp;
+            rp.mat = mat.get();
             return true;
         }
         temp = (-b + sqrt(b * b - 4 * a * c)) / (2.0f * a);
         if (temp < t_max && temp > t_min)
         {
-            rec.p = r.point_at_parameter(temp);
-            rec.normal = (rec.p - center) / radius;
-            rec.uv = get_uv((rec.p - center) / radius);
-            rec.t = temp;
-            rec.mat = mat.get();
+            rp.p = r.point_at_parameter(temp);
+            rp.normal = (rp.p - center) / radius;
+            rp.uv = get_uv((rp.p - center) / radius);
+            rp.t = temp;
+            rp.mat = mat.get();
             return true;
         }
     }
