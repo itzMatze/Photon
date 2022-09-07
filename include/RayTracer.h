@@ -23,13 +23,13 @@ public:
     void stop();
 
 private:
-    glm::vec4 calculate_color(const Ray& r, int depth, const int max_depth);
+    glm::vec4 calculate_color(const Ray& r, int depth, const int max_depth, RandomGenerator* random_generator);
     void calculate_pixel_rows(const int ns, const int max_depth);
     void calculate_pixel_rows_incremental(const int ns, const int max_depth);
 
     Camera& cam;
     Renderer& render_window;
-    RandomGenerator random_generator;
+    RandomGenerator rg;
     HitableList world;
     BvhNode bvh;
     std::mutex mutex;

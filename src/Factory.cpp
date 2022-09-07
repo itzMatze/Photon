@@ -92,18 +92,18 @@ HitableList create_scene()
     std::vector<std::shared_ptr<Hitable>> objects;
     // creating a few materials
     std::shared_ptr<Material> lambertian_1 = std::make_shared<Lambertian>(glm::vec3(0.5f, 0.1f, 0.7f));
-    std::shared_ptr<Material> lambertian_2 = std::make_shared<Lambertian>(glm::vec3(0.1f, 0.8f, 0.8f));
+    std::shared_ptr<Material> lambertian_2 = std::make_shared<Lambertian>(glm::vec3(1.0f, 1.0f, 1.0f));
     std::shared_ptr<Material> silver = std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.01f);
     std::shared_ptr<Material> gold = std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
-    std::shared_ptr<Material> glass = std::make_shared<Dielectric>(1.5f);
+    std::shared_ptr<Material> glass = std::make_shared<Dielectric>(1.4f);
     // creating the spheres
     objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -2.5f), 0.5f, lambertian_1));
     objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -2.5f), 100.0f, lambertian_2));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(1.1f, 0.0f, -2.5f), 0.5f, glass));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(1.1f, 0.3f, -2.5f), 0.5f, glass));
     objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.1f, 0.0f, -2.5f), 0.5f, gold));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 5.0f, -5.0f), 2.6f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(2.0f, 2.0f, 2.0f)))));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(3.0f, 3.0f, 1.0f), 2.6f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(3.0f, 3.0f, 3.0f)))));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(-3.0f, 3.0f, 1.0f), 2.6f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(2.0f, 2.0f, 2.0f)))));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 3.0f, -3.0f), 0.9f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(4.0f, 4.0f, 4.0f)))));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 2.0f, 1.0f), 0.9f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(5.0f, 5.0f, 5.0f)))));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(-2.0f, 2.0f, 1.0f), 0.9f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(4.0f, 4.0f, 4.0f)))));
     return HitableList(objects);
 }
 

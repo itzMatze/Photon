@@ -52,8 +52,7 @@ bool Lambertian::scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& atten
 {
     // TODO probably the scattered ray should be created with a direction in a hemisphere over the current point
     // diffuse material: scatter randomly anywhere, add normal to make sure the ray points away from the surface
-    glm::vec3 target = rec.p + rec.normal + random_generator->random_in_unit_sphere();
-    scattered = Ray(rec.p, target - rec.p);
+    scattered = Ray(rec.p, random_generator->random_cosine_weighted_hemisphere(rec.normal));
     attenuation = albedo->value(rec.uv.x, rec.uv.y, rec.p).values;
     return true;
 }
@@ -62,7 +61,7 @@ bool Metal::scatter(const Ray& r_in, const HitRecord& rec, glm::vec4& attenuatio
 {
     // reflective material: create reflected ray with a little offset depending on the roughness of the surface
     glm::vec3 reflected = glm::reflect(glm::normalize(r_in.direction()), rec.normal);
-    scattered = Ray(rec.p, reflected + fuzz * random_generator->random_in_unit_sphere());
+    scattered = Ray(rec.p, reflected + fuzz * glm::vec3(random_generator->random_num(), random_generator->random_num(), random_generator->random_num()));
     attenuation = albedo->value(0, 0, rec.p).values;
     return (glm::dot(scattered.direction(), rec.normal) > 0);
 }
