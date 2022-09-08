@@ -1,13 +1,5 @@
 #include "RandomGenerator.h"
 
-RandomGenerator::RandomGenerator()
-{
-    //std::random_device rd;
-    //std::uniform_real_distribution<float> dis(0, 20000);
-    distribution = std::uniform_real_distribution<float>(0.0f, 1.0f);
-    generator = std::mt19937(0/*dis(rd)*/);
-}
-
 glm::vec3 RandomGenerator::random_in_unit_sphere()
 {
     glm::vec3 p;
