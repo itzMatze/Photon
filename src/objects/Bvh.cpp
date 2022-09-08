@@ -13,7 +13,6 @@ BvhNode::BvhNode(std::vector<std::shared_ptr<Hitable>>::iterator begin, std::vec
     std::stable_sort(begin, end, [axis](std::shared_ptr<Hitable> a, std::shared_ptr<Hitable> b)
     {
         Aabb box_a, box_b;
-        // TODO: segmentation fault
         if (!(a->bounding_box(box_a) && b->bounding_box(box_b)))
         {
             std::cerr << "No bounding box for hitable that should be sorted!" << std::endl;

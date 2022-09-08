@@ -21,8 +21,8 @@ public:
     Aabb(const glm::vec3& a, const glm::vec3& b) : _min(a), _max(b) {}
     Aabb(Aabb box0, Aabb box1)
     {
-        glm::vec3 small(ffmin(box0.min().x, box1.min().x), ffmin(box0.min().y, box1.min().y), ffmin(box0.min().z, box1.min().z));
-        glm::vec3 big(ffmax(box0.max().x, box1.max().x), ffmax(box0.max().y, box1.max().y), ffmax(box0.max().z, box1.max().z));
+        glm::vec3 small(glm::min(box0.min(), box1.min()));
+        glm::vec3 big(glm::max(box0.max(), box1.max()));
         _min = small;
         _max = big;
     }

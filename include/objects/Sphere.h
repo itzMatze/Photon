@@ -12,8 +12,10 @@ public:
     {}
     bool hit(const Ray& r, float t_min, float t_max, RayPayload& rp) const override;
     bool bounding_box(Aabb& box) const override;
-    glm::vec2 get_uv(const glm::vec3& p) const;
     glm::vec3 center;
     float radius;
     std::shared_ptr<Material> mat;
+
+private:
+    glm::vec2 get_uv(const glm::vec3& p) const;
 };

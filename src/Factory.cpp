@@ -4,6 +4,11 @@
 #include "stb_image_write.h"
 #include "stb_image.h"
 #include "objects/Segment.h"
+#include "Materials.h"
+#include "Lights.h"
+#include "objects/Sphere.h"
+#include "objects/Hitable.h"
+#include "objects/Triangle.h"
 
 void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int channels)
 {
@@ -84,11 +89,18 @@ HitableList random_scene(RandomGenerator* random_generator)
     int nx, ny, nn;
     unsigned char* pixels = stbi_load("../assets/textures/white.png", &nx, &ny, &nn, 0);
     objects.push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 1.8f, -3.0f), 1.0f, std::make_shared<Lambertian>(std::make_shared<ImageTexture>(pixels, nx, ny, nn))));
+    objects.push_back(std::make_shared<Triangle>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, -1.0f), squared_color));
     return HitableList(objects);
 }
 
 HitableList create_scene()
 {
+    glm::vec3 top(0.0f, 0.01f, -2.2f);
+    glm::vec3 one(-0.75f, 1.5f, -2.2f);
+    glm::vec3 two(0.0f, 1.5f, -2.95f);
+    glm::vec3 three(0.75f, 1.5f, -2.2f);
+    glm::vec3 four(0.0f, 1.5f, -1.45f);
+
     std::vector<std::shared_ptr<Hitable>> objects;
     // creating a few materials
     std::shared_ptr<Material> lambertian_1 = std::make_shared<Lambertian>(glm::vec3(0.5f, 0.1f, 0.7f));
@@ -97,13 +109,61 @@ HitableList create_scene()
     std::shared_ptr<Material> gold = std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.1f);
     std::shared_ptr<Material> glass = std::make_shared<Dielectric>();
     // creating the spheres
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -2.5f), 0.5f, lambertian_1));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -2.5f), 100.0f, lambertian_2));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(1.1f, 0.3f, -2.5f), 0.5f, glass));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.1f, 0.0f, -2.5f), 0.5f, gold));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 3.0f, -3.0f), 0.9f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(4.0f, 4.0f, 4.0f)))));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 2.0f, 1.0f), 0.9f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(5.0f, 5.0f, 5.0f)))));
-    objects.push_back(std::make_shared<Sphere>(glm::vec3(-2.0f, 2.0f, 1.0f), 0.9f, std::make_shared<DiffuseLight>(std::make_shared<ConstantTexture>(Color(4.0f, 4.0f, 4.0f)))));
+    //objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -2.5f), 0.5f, lambertian_1));
+    objects.push_back(std::make_shared<Triangle>(glm::vec3(50.0f, 0.0f, 50.0f), glm::vec3(50.0f, 0.0f, -50.0f), glm::vec3(-50.0f, 0.0f, 50.0f), lambertian_2));
+    objects.push_back(std::make_shared<Triangle>(glm::vec3(-50.0f, 0.0f, 50.0f), glm::vec3(50.0f, 0.0f, -50.0f), glm::vec3(-50.0f, 0.0f, -50.0f), lambertian_2));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.7f, 0.35f, 0.0f), 0.3f, glass));
+    //objects.push_back(std::make_shared<Sphere>(glm::vec3(-1.1f, 0.0f, -2.5f), 0.5f, gold));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(-4.0f, 1.8f, -6.0f), 0.5f, std::make_shared<DiffuseLight>(glm::vec3(10.0f, 10.0f, 10.0f))));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(5.0f, 2.5f, -10.0f), 0.9f, std::make_shared<DiffuseLight>(glm::vec3(8.0f, 4.0f, 8.0f))));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(0.0f, 1.7f, -2.2f), 0.15f, std::make_shared<DiffuseLight>(glm::vec3(20.0f, 20.0f, 20.0f))));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(3.0f, 1.0f, 0.0f), 0.5f, std::make_shared<DiffuseLight>(glm::vec3(11.0f, 11.0f, 11.0f))));
+    objects.push_back(std::make_shared<Sphere>(glm::vec3(-3.0f, 1.0f, 0.0f), 0.5f, std::make_shared<DiffuseLight>(glm::vec3(11.0f, 11.0f, 11.0f))));
+    objects.push_back(std::make_shared<Triangle>(top, one, two, glass));
+    objects.push_back(std::make_shared<Triangle>(top, two, three, glass));
+    objects.push_back(std::make_shared<Triangle>(top, three, four, glass));
+    objects.push_back(std::make_shared<Triangle>(top, four, one, glass));
+    objects.push_back(std::make_shared<Triangle>(one, four, two, glass));
+    objects.push_back(std::make_shared<Triangle>(two, four, three, glass));
+
+    top = glm::vec3(1.7f, 0.01f, -0.5f);
+    one = glm::vec3(1.4f, 0.4f, -0.2f);
+    two = glm::vec3(1.4f, 0.4f, -0.8f);
+    three = glm::vec3(2.0f, 0.4f, -0.8f);
+    four = glm::vec3(2.0f, 0.4f, -0.2f);
+#if 0
+    objects.push_back(std::make_shared<Triangle>(top, one, two, glass));
+    objects.push_back(std::make_shared<Triangle>(top, two, three, glass));
+    objects.push_back(std::make_shared<Triangle>(top, three, four, glass));
+    objects.push_back(std::make_shared<Triangle>(top, four, one, glass));
+    objects.push_back(std::make_shared<Triangle>(one, four, two, glass));
+    objects.push_back(std::make_shared<Triangle>(two, four, three, glass));
+#else
+    objects.push_back(std::make_shared<Triangle>(one + glm::vec3(0.0f, -1.1f, 0.0f), one, two, glass));
+    objects.push_back(std::make_shared<Triangle>(one + glm::vec3(0.0f, -1.1f, 0.0f), two, two + glm::vec3(0.0f, -1.1f, 0.0f), glass));
+    objects.push_back(std::make_shared<Triangle>(two + glm::vec3(0.0f, -1.1f, 0.0f), two, three, glass));
+    objects.push_back(std::make_shared<Triangle>(two + glm::vec3(0.0f, -1.1f, 0.0f), three, three + glm::vec3(0.0f, -1.1f, 0.0f), glass));
+    objects.push_back(std::make_shared<Triangle>(three + glm::vec3(0.0f, -1.1f, 0.0f), three, four, glass));
+    objects.push_back(std::make_shared<Triangle>(three + glm::vec3(0.0f, -1.1f, 0.0f), four, four + glm::vec3(0.0f, -1.1f, 0.0f), glass));
+    objects.push_back(std::make_shared<Triangle>(four + glm::vec3(0.0f, -1.1f, 0.0f), four, one, glass));
+    objects.push_back(std::make_shared<Triangle>(four + glm::vec3(0.0f, -1.1f, 0.0f), one, one + glm::vec3(0.0f, -1.1f, 0.0f), glass));
+    objects.push_back(std::make_shared<Triangle>(four + glm::vec3(0.0f, -1.1f, 0.0f), one + glm::vec3(0.0f, -1.1f, 0.0f), three + glm::vec3(0.0f, -1.1f, 0.0f), glass));
+    objects.push_back(std::make_shared<Triangle>(two + glm::vec3(0.0f, -1.1f, 0.0f), three + glm::vec3(0.0f, -1.1f, 0.0f), one + glm::vec3(0.0f, -1.1f, 0.0f), glass));
+    objects.push_back(std::make_shared<Triangle>(two, one, three, glass));
+    objects.push_back(std::make_shared<Triangle>(four, three, one, glass));
+#endif
+    top = glm::vec3(-2.3f, 1.0f, -5.0f);
+    one = glm::vec3(-2.7f, 0.2f, -4.6f);
+    two = glm::vec3(-2.7f, 0.2f, -5.4f);
+    three = glm::vec3(-1.9f, 0.2f, -5.4f);
+    four = glm::vec3(-1.9f, 0.2f, -4.6f);
+
+    objects.push_back(std::make_shared<Triangle>(top, two, one, glass));
+    objects.push_back(std::make_shared<Triangle>(top, three, two, glass));
+    objects.push_back(std::make_shared<Triangle>(top, four, three, glass));
+    objects.push_back(std::make_shared<Triangle>(top, one, four, glass));
+    objects.push_back(std::make_shared<Triangle>(one, two, four, glass));
+    objects.push_back(std::make_shared<Triangle>(two, three, four, glass));
     return HitableList(objects);
 }
 
