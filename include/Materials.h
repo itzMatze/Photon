@@ -19,15 +19,11 @@ public:
 class Dielectric : public Material
 {
 public:
-    explicit Dielectric(float ri) : ref_idx(ri)
-    {}
-
+    explicit Dielectric() = default;
     bool scatter(const Ray& r_in, const RayPayload& rp, glm::vec4& attenuation, RandomGenerator* random_generator, Ray& scattered) const override;
 
 private:
-    static float reflectance(float cosine, float ref_idx);
-
-    float ref_idx;
+    static float reflectance(float cosine, float n_1, float n_2);
 };
 
 class Lambertian : public Material
