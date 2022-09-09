@@ -6,6 +6,7 @@
 class Camera
 {
 public:
+    Camera() = default;
     Camera(glm::vec3 origin, glm::vec3 look_at, glm::vec3 up, float vfov, float aspect, float aperture, float focus_dist)
     : origin(origin), lens_radius(aperture / 2.0f)
     {
@@ -44,6 +45,7 @@ public:
             return Ray(origin, lower_left_corner + s * horizontal + t * vertical - origin);
         }
     }
+
     glm::vec3 origin;
     glm::vec3 lower_left_corner;
     glm::vec3 horizontal;

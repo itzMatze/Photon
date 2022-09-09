@@ -56,6 +56,6 @@ bool Triangle::hit(const Ray &r, float t_min, float t_max, RayPayload& rp) const
 
 bool Triangle::bounding_box(Aabb& box) const
 {
-    box = Aabb(glm::min(p0, glm::min(p1, p2)) - glm::vec3(0.001f), glm::max(p0, glm::max(p1, p2)) + glm::vec3(0.001f));
+    box = Aabb(glm::min(p0, glm::min(p1, p2)) - glm::vec3(0.00001f), glm::max(p0, glm::max(p1, p2)) + glm::vec3(0.00001f));
     return true;
 }

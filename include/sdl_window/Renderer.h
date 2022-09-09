@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include <imgui.h>
 #include <backends/imgui_impl_sdl.h>
 #include <backends/imgui_impl_sdlrenderer.h>
@@ -11,22 +12,47 @@
 
 #include "Color.h"
 
+enum GUIChange
+{
+    NO_CHANGES = (0u),
+    CAM_CHANGE = (1u << 0),
+    RESOLUTION_CHANGE = (1u << 1),
+    SCENE_CHANGE = (1u << 2),
+    OTHER_CHANGE = (1u << 31)
+};
+
 struct RenderingInfo
 {
-    RenderingInfo(int ns, int max_depth, int scene_index, bool incremental, bool spectral) :
-        ns(ns), max_depth(max_depth), scene_index(scene_index), incremental(incremental), spectral(spectral)
+    RenderingInfo() = default;
+    RenderingInfo(int ns, int nx, int ny, int max_depth, int scene_index, bool incremental, bool spectral, 
+        glm::vec3 origin, glm::vec3 look_at, glm::vec3 up, float vfov, float aperture, float focus_dist) :
+            changes(NO_CHANGES), ns(ns), nx(nx), ny(ny), max_depth(max_depth), scene_index(scene_index),
+            save_on_finish(false), incremental(incremental), spectral(spectral),
+            origin(origin), look_at(look_at), up(up), vfov(vfov), aperture(aperture), focus_dist(focus_dist)
     {}
+    uint32_t changes;
     int ns;
+    int nx;
+    int ny;
     int max_depth;
     int scene_index;
+    bool save_on_finish;
     bool incremental;
     bool spectral;
+    glm::vec3 origin;
+    glm::vec3 look_at;
+    glm::vec3 up;
+    float vfov;
+    float aperture;
+    float focus_dist;
+
 };
 
 class Renderer
 {
 public:
     Renderer(int width, const int render_width, const int render_height, const bool use_surface = false);
+    void create_window(const uint32_t width, const uint32_t render_width, const uint32_t render_height);
     ~Renderer();
     void clean_up_sdl();
     void clean_surface(Color color);
@@ -51,6 +77,7 @@ public:
     int render_width;
     int render_height;
 private:
+    std::chrono::time_point<std::chrono::steady_clock> time = std::chrono::steady_clock::now();
     bool show_gui = true;
     bool use_surface = false;
     SDL_Window* win = nullptr;

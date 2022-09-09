@@ -7,6 +7,7 @@ class Material;
 
 struct RayPayload
 {
+    RayPayload() = default;
     RayPayload(uint32_t depth, uint32_t wavelength) : depth(depth), wavelength(wavelength)
     {}
     uint32_t depth;
