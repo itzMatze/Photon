@@ -3,7 +3,7 @@ project(Ray_Tracer_CPP)
 set(CMAKE_CXX_STANDARD 20)
 
 set(glm_DIR dependencies/glm-0.9.9.8/glm/cmake/glm)
-set(stb_dir dependencies/stb-master_@af1a5bc_10.09.21)
+set(stb_dir dependencies/stb-master_af1a5bc_10.09.21)
 set(ImGui_dir dependencies/imgui-1.87)
 set(SDL2_DIR dependencies/SDL2-2.0.20)
 set(google_test_DIR dependencies/googletest-release-1.11.0)
