@@ -9,7 +9,7 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, RayPayload& rp, const int max
         return glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     }
     // intersection test
-    if (bvh.hit(r, 0.001f, std::numeric_limits<float>::max(), rp))
+    if (bvh.hit(r, 0.0000001f, std::numeric_limits<float>::max(), rp))
     {
 #if 1
         Ray scattered = {};
@@ -29,6 +29,8 @@ glm::vec4 RayTracer::calculate_color(const Ray& r, RayPayload& rp, const int max
         }
 #else
         // visualization of normals
+        float travel = rp.t - 10.0f;
+        return glm::vec4(travel, travel, travel, 12.0f) / glm::vec4(12.0f);
         return 0.5f * glm::vec4(rp.normal.x + 1, rp.normal.y + 1, rp.normal.z + 1, 1.0f);
 #endif
     }

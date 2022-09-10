@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(glm_DIR dependencies/glm-0.9.9.8/glm/cmake/glm)
 set(stb_dir dependencies/stb-master_af1a5bc_10.09.21)
+set(tiny_obj_dir dependencies/tiny_obj_loader_a1e8bad_05.07.22)
 set(ImGui_dir dependencies/imgui-1.87)
 set(SDL2_DIR dependencies/SDL2-2.0.20)
 set(google_test_DIR dependencies/googletest-release-1.11.0)
@@ -26,6 +27,7 @@ include_directories(Ray_Tracer_CPP PUBLIC
         "${PROJECT_SOURCE_DIR}/include"
         ${SDL2_INCLUDE_DIRS}
         "${stb_dir}"
+        "${tiny_obj_dir}"
         "${ImGui_dir}"
         ${GLM_INCLUDE_DIRS})
 

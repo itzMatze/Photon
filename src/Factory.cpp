@@ -1,8 +1,11 @@
+#include <iostream>
 #include "Factory.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image_write.h"
 #include "stb_image.h"
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
 #include "objects/Segment.h"
 #include "Materials.h"
 #include "Lights.h"
@@ -50,6 +53,69 @@ void save_image(uint32_t* pixels, const std::string& name, int nx, int ny, int c
     stbi_write_png(path_to_image.string().c_str(), nx, ny, channels, pixels, nx * channels);
 }
 
+void load_obj(std::string file, glm::mat4 transformation, std::shared_ptr<Material> mat, std::vector<std::shared_ptr<Hitable>>& objects)
+{
+    glm::mat3 norm_trans = glm::mat3(transformation);
+    norm_trans = glm::transpose(glm::inverse(norm_trans));
+
+    tinyobj::ObjReaderConfig reader_config;
+    tinyobj::ObjReader reader;
+    if (!reader.ParseFromFile(file, reader_config))
+    {
+        if (!reader.Error().empty())
+        {
+            std::cerr << "TinyObjReader: " << reader.Error();
+        }
+        return;
+    }
+    if (!reader.Warning().empty())
+    {
+        std::cout << "TinyObjReader: " << reader.Warning();
+    }
+
+    auto& attrib = reader.GetAttrib();
+    auto& shapes = reader.GetShapes();
+    auto& materials = reader.GetMaterials();
+
+    for (size_t s = 0; s < shapes.size(); s++)
+    {
+        size_t index_offset = 0;
+        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); ++f)
+        {
+            size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+            std::vector<glm::vec3> vertices;
+            std::vector<glm::vec3> normals;
+            for (size_t v = 0; v < fv; v++) {
+                glm::vec4 vert;
+                glm::vec3 norm;
+                tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+                vert.x = attrib.vertices[3*size_t(idx.vertex_index)+0];
+                vert.y = attrib.vertices[3*size_t(idx.vertex_index)+1];
+                vert.z = attrib.vertices[3*size_t(idx.vertex_index)+2];
+                vert.w = 1.0f;
+
+                vertices.push_back(transformation * vert);
+                // Check if `normal_index` is zero or positive. negative = no normal data
+                if (idx.normal_index >= 0) {
+                    norm.x = attrib.normals[3*size_t(idx.normal_index)+0];
+                    norm.y = attrib.normals[3*size_t(idx.normal_index)+1];
+                    norm.z = attrib.normals[3*size_t(idx.normal_index)+2];
+                }
+                if (glm::length(norm) > 0.0f) normals.push_back(norm_trans * norm);
+            }
+            if (normals.size() == 3)
+            {
+                objects.push_back(std::make_shared<Triangle>(vertices[0], vertices[1], vertices[2], normals[0], normals[1], normals[2], mat));
+            }
+            else
+            {
+                objects.push_back(std::make_shared<Triangle>(vertices[0], vertices[1], vertices[2], mat));
+            }
+            index_offset += fv;
+        }
+    }
+}
+
 HitableList random_scene(RandomGenerator* random_generator)
 {
     std::vector<std::shared_ptr<Hitable>> objects;
@@ -89,7 +155,6 @@ HitableList random_scene(RandomGenerator* random_generator)
     int nx, ny, nn;
     unsigned char* pixels = stbi_load("../assets/textures/white.png", &nx, &ny, &nn, 0);
     objects.push_back(std::make_shared<Sphere>(glm::vec3(2.0f, 1.8f, -3.0f), 1.0f, std::make_shared<Lambertian>(std::make_shared<ImageTexture>(pixels, nx, ny, nn))));
-    objects.push_back(std::make_shared<Triangle>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, -1.0f), squared_color));
     return HitableList(objects);
 }
 
