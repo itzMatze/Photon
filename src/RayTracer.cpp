@@ -65,7 +65,7 @@ void RayTracer::calculate_pixel_rows(const RenderingInfo r_info, const Camera ca
                 color.values += r_info.spectral ? (Color::wavelength_to_rgba(rp.wavelength) * calculate_color(r, rp, r_info.max_depth, &random_generator)) : calculate_color(r, rp, r_info.max_depth, &random_generator);
             }
             color.values /= float(r_info.ns);
-            render_window->set_pixel(i, render_window->render_height - j - 1, color);
+            renderer.set_pixel(i, r_info.ny - j - 1, color);
         }
     }
     threads_done++;
@@ -102,9 +102,9 @@ void RayTracer::calculate_pixel_rows_incremental(const RenderingInfo r_info, con
                 // shoot ray
                 color.values = r_info.spectral ? (Color::wavelength_to_rgba(rp.wavelength) * calculate_color(r, rp, r_info.max_depth, &random_generator)) : calculate_color(r, rp, r_info.max_depth, &random_generator);
                 // calculate relative weight of pixel_color and new calculated color sample
-                pixel_color.values = render_window->get_pixel(i, render_window->render_height - j - 1);
+                pixel_color.values = renderer.get_pixel(i, renderer.render_height - j - 1);
                 color.values = glm::mix(color.values, pixel_color.values, (double(s - 1) / double(s)));
-                render_window->set_pixel(i, r_info.ny - j - 1, color);
+                renderer.set_pixel(i, r_info.ny - j - 1, color);
             }
         }
         std::unique_lock<std::mutex> locker(mutex, std::defer_lock);
@@ -150,13 +150,13 @@ void RayTracer::load_scene()
 void RayTracer::trace()
 {
     threads_joined = false;
-    render_window->clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
+    renderer.clean_surface(Color(0.0f, 0.0f, 0.0f, 0.0f));
     // tells the threads which row to pick next for calculation
-    row = render_window->render_height - 1;
+    row = renderer.render_height - 1;
     // and how many sample iterations are left
     samples = 1;
     threads_done = 0;
-    render_window->set_use_surface(r_info.incremental);
+    renderer.set_use_surface(r_info.incremental);
     for (uint32_t t = 0; t < num_threads; ++t)
     {
         threads.push_back(std::thread((r_info.incremental ? &RayTracer::calculate_pixel_rows_incremental

@@ -17,8 +17,7 @@ enum GUIChange
     NO_CHANGES = (0u),
     CAM_CHANGE = (1u << 0),
     RESOLUTION_CHANGE = (1u << 1),
-    SCENE_CHANGE = (1u << 2),
-    OTHER_CHANGE = (1u << 31)
+    SCENE_CHANGE = (1u << 2)
 };
 
 struct RenderingInfo

@@ -166,7 +166,7 @@ bool Renderer::render_frame(RenderingInfo& r_info, bool& save)
         {
             r_info.changes |= RESOLUTION_CHANGE;
         }
-        if (ImGui::InputInt("Max depth", &r_info.max_depth)) r_info.changes |= OTHER_CHANGE;
+        if (ImGui::InputInt("Max depth", &r_info.max_depth));
         ImGui::Separator();
         ImGui::Text("Camera");
         if (ImGui::InputFloat3("Origin", glm::value_ptr(r_info.origin))) r_info.changes |= CAM_CHANGE;
