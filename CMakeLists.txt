@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(Ray_Tracer_CPP)
+project(Photon)
 set(CMAKE_CXX_STANDARD 20)
 
 set(glm_DIR dependencies/glm-0.9.9.8/glm/cmake/glm)
@@ -15,15 +15,15 @@ set(SOURCE_FILES src/RayTracer.cpp src/RandomGenerator.cpp src/Factory.cpp src/P
         ${ImGui_dir}/imgui.cpp ${ImGui_dir}/imgui_draw.cpp ${ImGui_dir}/imgui_tables.cpp
         ${ImGui_dir}/imgui_widgets.cpp ${ImGui_dir}/backends/imgui_impl_sdl.cpp ${ImGui_dir}/backends/imgui_impl_sdlrenderer.cpp)
 
-add_executable(Ray_Tracer_CPP src/main.cpp ${SOURCE_FILES})
+add_executable(Photon src/main.cpp ${SOURCE_FILES})
 
 find_package(glm REQUIRED)
 find_package(SDL2 REQUIRED)
 
 find_library(SDL2_LIB SDL2.lib ${SDL2_DIR}/lib/x64/)
 
-target_link_libraries(Ray_Tracer_CPP ${SDL2_LIBRARIES})
-include_directories(Ray_Tracer_CPP PUBLIC
+target_link_libraries(Photon ${SDL2_LIBRARIES})
+include_directories(Photon PUBLIC
         "${PROJECT_SOURCE_DIR}/include"
         ${SDL2_INCLUDE_DIRS}
         "${stb_dir}"
