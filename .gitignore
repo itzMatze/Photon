@@ -1,5 +1,3 @@
 .*
-cmake-build-*
-images
-build*
-assets/models/
+/images
+/assets
