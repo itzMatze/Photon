@@ -37,12 +37,12 @@ public:
 
   // camera acts as a quadratic texture that can be accessed texture coordinates
   // sensor is defined in [0,1], but accesses outside are still valid
-  Ray get_ray(const cm::Vec2 pixel) const;
+  Ray get_ray(const glm::vec2 pixel) const;
 
 private:
   SpatialConfiguration spatial_conf;
   // position of the camera sensor
-  cm::Vec3 upper_left_corner;
+  glm::vec3 upper_left_corner;
   // sensor is quadratic
   float sensor_size;
 };

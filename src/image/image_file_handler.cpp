@@ -5,7 +5,7 @@
 #include "stb/stb_image.h"
 #include "stb/stb_image_write.h"
 
-void write_image(const std::vector<Color>& pixels, std::string image_path, const cm::Vec2u resolution, FileType type)
+void write_image(const std::vector<Color>& pixels, std::string image_path, const glm::uvec2 resolution, FileType type)
 {
   if (type == FileType::png)
   {
@@ -37,7 +37,7 @@ void write_image(const std::vector<Color>& pixels, std::string image_path, const
   }
 }
 
-void save_single_image(const std::vector<Color>& pixels, const std::string& name, const cm::Vec2u resolution, FileType type)
+void save_single_image(const std::vector<Color>& pixels, const std::string& name, const glm::uvec2 resolution, FileType type)
 {
   std::string image_path("images/" + name);
   std::filesystem::path path(image_path);
@@ -59,12 +59,12 @@ void save_single_image(const std::vector<Color>& pixels, const std::string& name
   write_image(pixels, image_path, resolution, type);
 }
 
-void load_image(const std::string& path, std::vector<uint32_t>& bitmap, cm::Vec2u& resolution)
+void load_image(const std::string& path, std::vector<uint32_t>& bitmap, glm::uvec2& resolution)
 {
   int width, height, channels;
   unsigned char* pixels = stbi_load(path.c_str(), &width, &height, &channels, 0);
   assert(channels == 3 || channels == 4);
-  resolution = cm::Vec2u(width, height);
+  resolution = glm::uvec2(width, height);
   for (uint32_t i = 0; i < width * height * channels; i += channels)
   {
     // if alpha channel is not there, set it to max value
@@ -80,7 +80,7 @@ void load_image(const std::string& path, std::vector<uint32_t>& bitmap, cm::Vec2
   stbi_image_free(pixels);
 }
 
-ImageSeries::ImageSeries(const std::string& directory, const cm::Vec2u resolution, FileType type) : dir("images/" + directory), resolution(resolution), type(type)
+ImageSeries::ImageSeries(const std::string& directory, const glm::uvec2 resolution, FileType type) : dir("images/" + directory), resolution(resolution), type(type)
 {
   if (!std::filesystem::exists(dir)) std::filesystem::create_directory(dir);
 }

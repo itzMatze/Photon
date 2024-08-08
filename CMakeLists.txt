@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.19)
 project(Photon)
 set(CMAKE_CXX_STANDARD 20)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options(-msse4.2)
-  add_compile_definitions(SSE_ENABLED)
-endif()
-
 set(SOURCE_FILES
   src/image/image_file_handler.cpp
   src/object/aabb.cpp

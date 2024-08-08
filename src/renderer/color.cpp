@@ -16,7 +16,7 @@ Color::Color(uint32_t hex_color)
   alpha = float(hex_color) / 255.0f;
 }
 
-Color::Color(const cm::Vec3& rgb) : value(rgb), alpha(1.0)
+Color::Color(const glm::vec3& rgb) : value(rgb), alpha(1.0)
 {}
 
 Color::Color(float r, float g, float b) : value(r, g, b), alpha(1.0)

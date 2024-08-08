@@ -33,9 +33,9 @@ int load_file(const std::string& path, rapidjson::Document& document)
   return 0;
 }
 
-cm::Vec3 get_vec3(const rapidjson::GenericValue<rapidjson::UTF8<>>& rj_vec3, int base_index = 0)
+glm::vec3 get_vec3(const rapidjson::GenericValue<rapidjson::UTF8<>>& rj_vec3, int base_index = 0)
 {
-  return cm::Vec3(rj_vec3[base_index].GetFloat(), rj_vec3[base_index + 1].GetFloat(), rj_vec3[base_index + 2].GetFloat());
+  return glm::vec3(rj_vec3[base_index].GetFloat(), rj_vec3[base_index + 1].GetFloat(), rj_vec3[base_index + 2].GetFloat());
 }
 
 void load_lights(const auto& rj_lights, SceneBuilder& scene_builder)
@@ -43,7 +43,7 @@ void load_lights(const auto& rj_lights, SceneBuilder& scene_builder)
   for (const auto& light : rj_lights)
   {
     float intensity = light["intensity"].GetFloat();
-    cm::Vec3 position = get_vec3(light["position"]);
+    glm::vec3 position = get_vec3(light["position"]);
     scene_builder.get_lights().add_new_data(Light(intensity, position));
   }
 }
@@ -123,8 +123,8 @@ Object load_object(const auto& rj_object)
     vertex.pos = get_vec3(rj_vertices, i);
     if (rj_object.HasMember("uvs"))
     {
-      cm::Vec3 uvs = get_vec3(rj_object["uvs"].GetArray(), i);
-      vertex.tex_coords = cm::Vec2(uvs.x, uvs.y);
+      glm::vec3 uvs = get_vec3(rj_object["uvs"].GetArray(), i);
+      vertex.tex_coords = glm::vec2(uvs.x, uvs.y);
     }
     vertices.emplace_back(vertex);
   }
@@ -156,16 +156,16 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
   if (load_file(path, doc) != 0) return 1;
 
   const auto& rj_image_settings = doc["settings"]["image_settings"];
-  scene_file.settings.resolution = cm::Vec2u(rj_image_settings["width"].GetUint(), rj_image_settings["height"].GetUint());
+  scene_file.settings.resolution = glm::uvec2(rj_image_settings["width"].GetUint(), rj_image_settings["height"].GetUint());
   // if no bucket size was set in scene file, use default value
   scene_file.settings.bucket_size = rj_image_settings.HasMember("bucket_size") ? rj_image_settings["bucket_size"].GetUint() : 20;
   const auto& rj_background_color = doc["settings"]["background_color"].GetArray();
   scene_builder.set_background(Color(rj_background_color[0].GetFloat(), rj_background_color[1].GetFloat(), rj_background_color[2].GetFloat()));
 
   const auto& rj_cam_matrix = doc["camera"]["matrix"];
-  const cm::Mat3 orientation({get_vec3(rj_cam_matrix, 0),
+  const glm::mat3 orientation(get_vec3(rj_cam_matrix, 0),
                               get_vec3(rj_cam_matrix, 3),
-                              get_vec3(rj_cam_matrix, 6)});
+                              get_vec3(rj_cam_matrix, 6));
   scene_builder.get_camera().get_spatial_conf().set_orientation(orientation);
 
   scene_builder.get_camera().get_spatial_conf().set_position(get_vec3(doc["camera"]["position"]));
@@ -195,7 +195,7 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
 
 int load_object_file(const std::string& file_path, Object& object)
 {
-  const std::string path(std::string("../../Scenes/") + file_path);
+  const std::string path(std::string("../Scenes/") + file_path);
   rapidjson::Document doc;
   if (load_file(path, doc) != 0) return 1;
   object = load_object(doc);

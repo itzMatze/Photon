@@ -21,18 +21,18 @@ public:
 private:
   struct ImageBucket
   {
-    cm::Vec2u min;
-    cm::Vec2u max;
+    glm::uvec2 min;
+    glm::uvec2 max;
   };
 
   std::shared_ptr<Scene> scene;
-  cm::Vec2u resolution;
+  glm::uvec2 resolution;
   std::string output_name;
   std::vector<ImageBucket> buckets;
   Settings settings;
 
   std::vector<Color> render_frame() const;
   void render_buckets(std::vector<Color>* pixels, std::atomic<uint32_t>* bucket_idx) const;
-  cm::Vec2 get_camera_coordinates(cm::Vec2u pixel) const;
+  glm::vec2 get_camera_coordinates(glm::uvec2 pixel) const;
 };
 

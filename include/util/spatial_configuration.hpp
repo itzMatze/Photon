@@ -1,44 +1,44 @@
 #pragma once
 
-#include "mat.hpp"
-#include "vec.hpp"
-#include "quat.hpp"
+#include "glm/matrix.hpp"
+#include "util/vec3.hpp"
+#include "glm/gtc/quaternion.hpp"
 
-constexpr cm::Vec3 x_axis(1.0, 0.0, 0.0);
-constexpr cm::Vec3 y_axis(0.0, 1.0, 0.0);
-constexpr cm::Vec3 z_axis(0.0, 0.0, 1.0);
+constexpr glm::vec3 x_axis(1.0, 0.0, 0.0);
+constexpr glm::vec3 y_axis(0.0, 1.0, 0.0);
+constexpr glm::vec3 z_axis(0.0, 0.0, 1.0);
 
 class SpatialConfiguration
 {
 public:
   SpatialConfiguration();
-  SpatialConfiguration(const cm::Mat3& orientation, const cm::Vec3& position = cm::Vec3(0.0, 0.0, 0.0), float scale = 1.0);
-  SpatialConfiguration(const cm::Quatf& orientation, const cm::Vec3& position = cm::Vec3(0.0, 0.0, 0.0), float scale = 1.0);
-  SpatialConfiguration(const cm::Vec3& position);
-  void translate(const cm::Vec3& translation);
-  void set_position(const cm::Vec3& position);
-  void rotate(cm::Vec3 angles, bool use_radian = false);
+  SpatialConfiguration(const glm::mat3& orientation, const glm::vec3& position = glm::vec3(0.0, 0.0, 0.0), float scale = 1.0);
+  SpatialConfiguration(const glm::quat& orientation, const glm::vec3& position = glm::vec3(0.0, 0.0, 0.0), float scale = 1.0);
+  SpatialConfiguration(const glm::vec3& position);
+  void translate(const glm::vec3& translation);
+  void set_position(const glm::vec3& position);
+  void rotate(glm::vec3 angles, bool use_radian = false);
   void rotate(float yaw, float pitch, float roll, bool use_radian = false);
-  void set_orientation(const cm::Mat3& orientation);
-  void set_orientation(const cm::Quatf& orientation);
+  void set_orientation(const glm::mat3& orientation);
+  void set_orientation(const glm::quat& orientation);
   void set_scale(float scale);
-  cm::Vec3 get_position() const;
-  cm::Quatf get_orientation() const;
+  glm::vec3 get_position() const;
+  glm::quat get_orientation() const;
   float get_scale() const;
-  cm::Vec3 get_x_axis() const;
-  cm::Vec3 get_y_axis() const;
-  cm::Vec3 get_z_axis() const;
-  cm::Vec3 transform_pos(const cm::Vec3& pos) const;
-  cm::Vec3 transform_dir(const cm::Vec3& dir) const;
-  cm::Vec3 inverse_transform_pos(const cm::Vec3& pos) const;
-  cm::Vec3 inverse_transform_dir(const cm::Vec3& dir) const;
+  glm::vec3 get_x_axis() const;
+  glm::vec3 get_y_axis() const;
+  glm::vec3 get_z_axis() const;
+  glm::vec3 transform_pos(const glm::vec3& pos) const;
+  glm::vec3 transform_dir(const glm::vec3& dir) const;
+  glm::vec3 inverse_transform_pos(const glm::vec3& pos) const;
+  glm::vec3 inverse_transform_dir(const glm::vec3& dir) const;
 
 private:
-  cm::Quatf orientation;
-  cm::Vec3 position;
+  glm::quat orientation;
+  glm::vec3 position;
   float scale;
   // coordinate system
-  cm::Vec3 local_x_axis, local_y_axis, local_z_axis;
+  glm::vec3 local_x_axis, local_y_axis, local_z_axis;
 
   void update_coordinate_system();
 };

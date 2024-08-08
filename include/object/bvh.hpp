@@ -58,9 +58,9 @@ public:
   {
     // split bounding box into two new ones at the specified axis
     float mid = (node.bounding_box.max[axis] - node.bounding_box.min[axis]) / 2.0;
-    cm::Vec3 p0 = node.bounding_box.min;
+    glm::vec3 p0 = node.bounding_box.min;
     p0[axis] += mid;
-    cm::Vec3 p1 = node.bounding_box.max;
+    glm::vec3 p1 = node.bounding_box.max;
     p1[axis] -= mid;
     AABB box_0(node.bounding_box.min, p1);
     AABB box_1(p0, node.bounding_box.max);

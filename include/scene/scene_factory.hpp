@@ -4,5 +4,3 @@
 Scene create_single_triangle_scene();
 Scene create_triple_triangle_scene();
 Scene create_pyramid_star_scene();
-Scene create_progression_video_scene();
-

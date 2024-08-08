@@ -10,7 +10,7 @@
 #include "util/timer.hpp"
 #include "util/vec2.hpp"
 
-static constexpr cm::Vec2u resolution(1920, 1080);
+static constexpr glm::uvec2 resolution(1920, 1080);
 
 int main(int argc, char** argv)
 {
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
   std::cerr << "Using " << thread_count << " threads" << std::endl;
   Timer t;
   scene_file.scene = std::make_shared<Scene>(create_pyramid_star_scene());
-  scene_file.settings.resolution = cm::Vec2u(1920, 1080);
+  scene_file.settings.resolution = glm::uvec2(1920, 1080);
   scene_file.settings.bucket_size = 20;
   std::cout << "Scene created: " << t.restart<std::milli>() << "ms" << std::endl;
   renderer.init(scene_file, "progression", {.thread_count = thread_count});

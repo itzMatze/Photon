@@ -20,6 +20,6 @@ public:
 
   std::shared_ptr<const std::vector<Vertex>> vertices;
   uint32_t vertex_indices[3];
-  cm::Vec3 geometric_normal;
+  glm::vec3 geometric_normal;
 };
 

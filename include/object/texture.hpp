@@ -18,13 +18,13 @@ class Texture
 public:
   struct AlbedoParameters
   {
-    cm::Vec3 albedo;
+    glm::vec3 albedo;
   };
 
   struct BitmapParameters
   {
     std::vector<uint32_t> bitmap;
-    cm::Vec2u resolution;
+    glm::uvec2 resolution;
   };
 
   struct CheckerParameters
@@ -41,13 +41,13 @@ public:
     float thickness;
   };
 
-  Texture(const cm::Vec3& albedo);
+  Texture(const glm::vec3& albedo);
   Texture(const AlbedoParameters& albedo_params);
   Texture(const BitmapParameters& bitmap_params);
   Texture(const CheckerParameters& checker_params);
   Texture(const EdgesParameters& edges_params);
   ~Texture();
-  cm::Vec3 get_value(cm::Vec2 bary, cm::Vec2 tex_coords) const;
+  glm::vec3 get_value(glm::vec2 bary, glm::vec2 tex_coords) const;
 
 private:
   TextureType type;

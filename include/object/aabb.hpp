@@ -7,10 +7,10 @@ class AABB
 {
 public:
   AABB();
-  AABB(const cm::Vec3& min, const cm::Vec3& max);
+  AABB(const glm::vec3& min, const glm::vec3& max);
   bool intersect(const Ray& ray) const;
   bool intersect(const AABB& other) const;
 
-  cm::Vec3 min;
-  cm::Vec3 max;
+  glm::vec3 min;
+  glm::vec3 max;
 };

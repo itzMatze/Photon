@@ -4,7 +4,7 @@
 
 struct Settings
 {
-  cm::Vec2u resolution;
+  glm::uvec2 resolution;
   uint32_t bucket_size;
 };
 

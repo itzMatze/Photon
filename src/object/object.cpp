@@ -2,7 +2,7 @@
 #include "object/aabb.hpp"
 #include "object/triangle.hpp"
 #include "util/spatial_configuration.hpp"
-#include "util/vec.hpp"
+#include "glm/geometric.hpp"
 
 // only triangles are supported
 Object::Object(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const SpatialConfiguration& spatial_conf, int32_t material_idx, bool compute_normals) :
@@ -19,7 +19,7 @@ Object::Object(const std::vector<Vertex>& vertices, const std::vector<uint32_t>&
     for (auto& vertex : *(this->vertices))
     {
       // make sure that any normals have been added to the vertex
-      if (cm::length(vertex.normal) > 0.0001) vertex.normal = cm::normalize(vertex.normal);
+      if (glm::length(vertex.normal) > 0.0001) vertex.normal = glm::normalize(vertex.normal);
     }
   }
   bvh = BVH<Triangle>(triangles, 1);
@@ -44,8 +44,8 @@ AABB Object::get_world_space_bounding_box() const
   AABB aabb;
   for (const auto& vertex : *vertices)
   {
-    aabb.min = cm::min(spatial_conf.transform_pos(vertex.pos), aabb.min);
-    aabb.max = cm::max(spatial_conf.transform_pos(vertex.pos), aabb.max);
+    aabb.min = glm::min(spatial_conf.transform_pos(vertex.pos), aabb.min);
+    aabb.max = glm::max(spatial_conf.transform_pos(vertex.pos), aabb.max);
   }
   return aabb;
 }
@@ -73,8 +73,8 @@ bool Object::intersect(const Ray& ray, HitInfo& hit_info) const
     hit_info = cur_hit_info;
     // transform position and normals
     hit_info.pos = spatial_conf.transform_pos(hit_info.pos);
-    hit_info.geometric_normal = cm::normalize(spatial_conf.transform_dir(hit_info.geometric_normal));
-    hit_info.normal = cm::normalize(spatial_conf.transform_dir(hit_info.normal));
+    hit_info.geometric_normal = glm::normalize(spatial_conf.transform_dir(hit_info.geometric_normal));
+    hit_info.normal = glm::normalize(spatial_conf.transform_dir(hit_info.normal));
     hit_info.material_idx = material_idx;
     return true;
   }

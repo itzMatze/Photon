@@ -1,7 +1,7 @@
 #include "object/texture.hpp"
 #include "renderer/color.hpp"
 
-Texture::Texture(const cm::Vec3& albedo) : type(TextureType::Albedo), albedo_params(albedo)
+Texture::Texture(const glm::vec3& albedo) : type(TextureType::Albedo), albedo_params(albedo)
 {}
 
 Texture::Texture(const AlbedoParameters& albedo_params) : type(TextureType::Albedo), albedo_params(albedo_params)
@@ -35,7 +35,7 @@ Texture::~Texture()
   }
 }
 
-cm::Vec3 Texture::get_value(cm::Vec2 bary, cm::Vec2 tex_coords) const
+glm::vec3 Texture::get_value(glm::vec2 bary, glm::vec2 tex_coords) const
 {
   switch (type)
   {
@@ -43,7 +43,7 @@ cm::Vec3 Texture::get_value(cm::Vec2 bary, cm::Vec2 tex_coords) const
       return albedo_params.albedo;
     case TextureType::Bitmap:
     {
-      cm::Vec2u idx = tex_coords * bitmap_params.resolution;
+      glm::uvec2 idx = tex_coords * glm::vec2(bitmap_params.resolution);
       // invert image because textures are loaded upside down
       idx.y = bitmap_params.resolution.y - idx.y;
       Color color(bitmap_params.bitmap[idx.y * bitmap_params.resolution.x + idx.x]);
@@ -51,7 +51,7 @@ cm::Vec3 Texture::get_value(cm::Vec2 bary, cm::Vec2 tex_coords) const
     }
     case TextureType::Checker:
     {
-      cm::Vec2u tile_idx = tex_coords / checker_params.tile_size;
+      glm::uvec2 tile_idx = tex_coords / checker_params.tile_size;
       // check whether both indices are either even or odd, then the even texture is used
       // modulo check with bit twiddling
       if ((tile_idx.x & 1u) == (tile_idx.y & 1))
@@ -66,7 +66,7 @@ cm::Vec3 Texture::get_value(cm::Vec2 bary, cm::Vec2 tex_coords) const
     case TextureType::Edges:
     {
       // check if point is on the edge
-      if (bary.u < edges_params.thickness || bary.v < edges_params.thickness || (1 - bary.u - bary.v) < edges_params.thickness)
+      if (bary.s < edges_params.thickness || bary.t < edges_params.thickness || (1 - bary.s - bary.t) < edges_params.thickness)
       {
         return edges_params.edge->get_value(bary, tex_coords);
       }
@@ -77,5 +77,5 @@ cm::Vec3 Texture::get_value(cm::Vec2 bary, cm::Vec2 tex_coords) const
     }
   }
   // should never be reached
-  return cm::Vec3(0.0, 0.0, 0.0);
+  return glm::vec3(0.0, 0.0, 0.0);
 }
