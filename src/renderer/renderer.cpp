@@ -1,4 +1,5 @@
 #include "renderer/renderer.hpp"
+#include "renderer/output.hpp"
 #include "util/timer.hpp"
 #include <atomic>
 #include <iostream>
@@ -15,6 +16,7 @@ void Renderer::init(const SceneFile& scene_file, const std::string& name, const 
   scene = scene_file.scene;
   resolution = scene_file.settings.resolution;
   output_name = name;
+  output.init(resolution, OutputTargetFlags::ColorArray | OutputTargetFlags::SDLSurface);
   buckets.clear();
 
   // divide image into buckets that can be rendered concurrently
@@ -44,8 +46,8 @@ void Renderer::render()
   assert(scene);
   if (!scene->is_animated())
   {
-    std::vector<Color> pixels = render_frame();
-    save_single_image(pixels, output_name, resolution, FileType::png);
+    if (!render_frame()) return;
+    save_single_image(output.get_pixels(), output_name, resolution, FileType::png);
   }
   else
   {
@@ -54,31 +56,31 @@ void Renderer::render()
     while (scene->step())
     {
       Timer t;
-      std::vector<Color> pixels = render_frame();
+      if (!render_frame()) return;
       std::cout << "frametime " << frame_idx << ": " << t.restart<std::milli>() << "ms" << std::endl;
-      image_series.save_image(pixels, frame_idx);
+      image_series.save_image(output.get_pixels(), frame_idx);
       frame_idx++;
     }
   }
 }
 
-std::vector<Color> Renderer::render_frame() const
+bool Renderer::render_frame()
 {
-  std::vector<Color> pixels(resolution.x * resolution.y);
   std::atomic<uint32_t> bucket_idx = 0;
   if (settings.thread_count < 2)
   {
-    render_buckets(&pixels, &bucket_idx);
+    render_buckets(&bucket_idx);
   }
   else
   {
     std::vector<std::jthread> threads;
-    for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&Renderer::render_buckets, this, &pixels, &bucket_idx));
+    for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&Renderer::render_buckets, this, &bucket_idx));
+    Timer t;
   }
-  return pixels;
+  return true;
 }
 
-void Renderer::render_buckets(std::vector<Color>* pixels, std::atomic<uint32_t>* bucket_idx) const
+void Renderer::render_buckets(std::atomic<uint32_t>* bucket_idx)
 {
   // store all rays that need to be traced, their accumulated attenuation, and their depth
   struct PathVertex
@@ -152,7 +154,7 @@ void Renderer::render_buckets(std::vector<Color>* pixels, std::atomic<uint32_t>*
           }
         }
         // does not require synchronization because every thread writes different pixels
-        (*pixels)[y * resolution.x + x] = color;
+        output.set_pixel(x, y, color);
       }
     }
   }

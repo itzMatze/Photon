@@ -15,6 +15,7 @@ set(SOURCE_FILES
   src/object/triangle.cpp
   src/renderer/camera.cpp
   src/renderer/color.cpp
+  src/renderer/output.cpp
   src/renderer/ray.cpp
   src/renderer/renderer.cpp
   src/scene/scene.cpp

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "renderer/color.hpp"
+#include "renderer/output.hpp"
 #include "scene/scene.hpp"
 #include "scene/scene_file_handler.hpp"
 #include "util/vec2.hpp"
@@ -30,9 +31,10 @@ private:
   std::string output_name;
   std::vector<ImageBucket> buckets;
   Settings settings;
+  Output output;
 
-  std::vector<Color> render_frame() const;
-  void render_buckets(std::vector<Color>* pixels, std::atomic<uint32_t>* bucket_idx) const;
+  bool render_frame();
+  void render_buckets(std::atomic<uint32_t>* bucket_idx);
   glm::vec2 get_camera_coordinates(glm::uvec2 pixel) const;
 };
 
