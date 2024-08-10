@@ -155,12 +155,17 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
   rapidjson::Document doc;
   if (load_file(path, doc) != 0) return 1;
 
-  const auto& rj_image_settings = doc["settings"]["image_settings"];
-  scene_file.settings.resolution = glm::uvec2(rj_image_settings["width"].GetUint(), rj_image_settings["height"].GetUint());
-  // if no bucket size was set in scene file, use default value
-  scene_file.settings.bucket_size = rj_image_settings.HasMember("bucket_size") ? rj_image_settings["bucket_size"].GetUint() : 20;
-  const auto& rj_background_color = doc["settings"]["background_color"].GetArray();
-  scene_builder.set_background(Color(rj_background_color[0].GetFloat(), rj_background_color[1].GetFloat(), rj_background_color[2].GetFloat()));
+  if (doc.HasMember("settings"))
+  {
+    const auto& rj_settings = doc["settings"];
+    if (rj_settings.HasMember("background_color")) scene_builder.set_background(Color(get_vec3(rj_settings["background_color"].GetArray())));
+    if (rj_settings.HasMember("resolution"))
+    {
+      scene_file.settings.resolution.x = rj_settings["resolution"]["width"].GetUint();
+      scene_file.settings.resolution.y = rj_settings["resolution"]["height"].GetUint();
+    }
+    if (rj_settings.HasMember("bucket_size")) scene_file.settings.bucket_size = rj_settings["bucket_size"].GetUint();
+  }
 
   const auto& rj_cam_matrix = doc["camera"]["matrix"];
   const glm::mat3 orientation(get_vec3(rj_cam_matrix, 0),

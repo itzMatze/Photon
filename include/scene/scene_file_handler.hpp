@@ -4,8 +4,8 @@
 
 struct Settings
 {
-  glm::uvec2 resolution;
-  uint32_t bucket_size;
+  glm::uvec2 resolution = glm::uvec2(1920, 1080);
+  uint32_t bucket_size = 20;
   uint32_t max_path_length = 16;
 };
 
