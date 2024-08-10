@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.19)
 project(Photon)
 set(CMAKE_CXX_STANDARD 20)
 
+set(SDL2_DIR "${PROJECT_SOURCE_DIR}/dependencies/SDL2")
+
 set(SOURCE_FILES
   src/image/image_file_handler.cpp
   src/object/aabb.cpp
@@ -18,6 +20,7 @@ set(SOURCE_FILES
   src/renderer/output.cpp
   src/renderer/ray.cpp
   src/renderer/renderer.cpp
+  src/renderer/window.cpp
   src/scene/scene.cpp
   src/scene/scene_factory.cpp
   src/scene/scene_builder.cpp
@@ -28,5 +31,10 @@ set(SOURCE_FILES
   dependencies/stb/stb_image_write.cpp)
 
 add_executable(Photon src/main.cpp ${SOURCE_FILES})
+
 target_include_directories(Photon PRIVATE "${PROJECT_SOURCE_DIR}/include"
-  "${PROJECT_SOURCE_DIR}/dependencies/")
+  "${PROJECT_SOURCE_DIR}/dependencies/"
+  "${SDL2_DIR}/include")
+
+add_subdirectory("${SDL2_DIR}")
+target_link_libraries(Photon SDL2)

@@ -2,6 +2,7 @@
 #include <string>
 #include "renderer/color.hpp"
 #include "renderer/output.hpp"
+#include "renderer/window.hpp"
 #include "scene/scene.hpp"
 #include "scene/scene_file_handler.hpp"
 #include "util/vec2.hpp"
@@ -32,6 +33,7 @@ private:
   std::vector<ImageBucket> buckets;
   Settings settings;
   Output output;
+  Window preview_window;
 
   bool render_frame();
   void render_buckets(std::atomic<uint32_t>* bucket_idx);

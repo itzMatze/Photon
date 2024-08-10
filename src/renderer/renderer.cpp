@@ -17,6 +17,7 @@ void Renderer::init(const SceneFile& scene_file, const std::string& name, const 
   resolution = scene_file.settings.resolution;
   output_name = name;
   output.init(resolution, OutputTargetFlags::ColorArray | OutputTargetFlags::SDLSurface);
+  preview_window.init(1000, resolution);
   buckets.clear();
 
   // divide image into buckets that can be rendered concurrently
@@ -76,6 +77,17 @@ bool Renderer::render_frame()
     std::vector<std::jthread> threads;
     for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&Renderer::render_buckets, this, &bucket_idx));
     Timer t;
+    while (bucket_idx.load() < buckets.size())
+    {
+      if (!preview_window.get_inputs()) return false;
+      if (t.elapsed() > 0.5)
+      {
+        t.restart();
+        preview_window.update_content(output.get_sdl_surface());
+      }
+      std::this_thread::yield();
+    }
+    preview_window.update_content(output.get_sdl_surface());
   }
   return true;
 }
