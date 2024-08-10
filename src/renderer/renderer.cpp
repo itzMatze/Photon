@@ -2,7 +2,6 @@
 #include "renderer/output.hpp"
 #include "renderer/rendering_algorithms.hpp"
 #include "util/timer.hpp"
-#include <atomic>
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -11,6 +10,16 @@
 #include "scene/scene_file_handler.hpp"
 #include "util/random_generator.hpp"
 #include "util/vec2.hpp"
+
+enum class SignalFlags : uint32_t
+{
+  None = 0,
+  Stop = (1 << 0),
+  PreventOutputAccess = (1 << 1),
+};
+
+using Signals = NamedBitfield<SignalFlags>;
+ENABLE_ENUM_OPERATORS(SignalFlags);
 
 void Renderer::init(SceneFile& scene_file, const std::string& name, const Settings& settings)
 {
@@ -78,7 +87,13 @@ glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool u
   return pixel_coordinates;
 }
 
-void render_buckets(const SceneFile* scene_file, const Renderer::Settings* renderer_settings, std::shared_ptr<Output> output, std::atomic<uint32_t>* bucket_idx, const std::vector<ImageBucket>* buckets)
+void render_buckets(const SceneFile* scene_file,
+                    const Renderer::Settings* renderer_settings,
+                    std::shared_ptr<Output> output,
+                    std::atomic<uint32_t>* bucket_idx,
+                    const std::vector<ImageBucket>* buckets,
+                    std::vector<Signals>* thread_signals,
+                    uint32_t thread_idx)
 {
   // atomically get next bucket index in each iteration and check whether the index is still valid
   for (uint32_t local_bucket_idx = bucket_idx->fetch_add(1); local_bucket_idx < buckets->size(); local_bucket_idx = bucket_idx->fetch_add(1))
@@ -88,9 +103,13 @@ void render_buckets(const SceneFile* scene_file, const Renderer::Settings* rende
     {
       for (uint32_t x = bucket.min.x; x < bucket.max.x; x++)
       {
+        if (thread_signals->back() & SignalFlags::Stop) return;
         Color color = whitted_ray_trace(*scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, renderer_settings->use_jittering));
-        // does not require synchronization because every thread writes different pixels
+        // wait if preview is currently updated
+        while (thread_signals->back() & SignalFlags::PreventOutputAccess);
+        (*thread_signals)[thread_idx] |= SignalFlags::PreventOutputAccess;
         output->set_pixel(x, y, color);
+        (*thread_signals)[thread_idx] &= ~SignalFlags::PreventOutputAccess;
       }
     }
   }
@@ -99,23 +118,42 @@ void render_buckets(const SceneFile* scene_file, const Renderer::Settings* rende
 bool Renderer::render_frame()
 {
   std::atomic<uint32_t> bucket_idx = 0;
+  // create enum bitfields to send signals from master thread to slaves and communicate back
+  std::vector<Signals> thread_signals(settings.thread_count + 1);
   std::vector<std::jthread> threads;
-  for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_idx, &buckets));
+  for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_idx, &buckets, &thread_signals, i));
   // if the preview window should not be shown we can return immediately
-  if (!preview_window) return true;
+  if (!preview_window)
+  {
+    threads.clear();
+    return true;
+  }
   // otherwise update the window at fixed time steps and after rendering is finished
   Timer t;
   while (bucket_idx.load() < buckets.size())
   {
     // window received exit command, stop rendering and return early
-    if (!preview_window->get_inputs()) return false;
+    if (!preview_window->get_inputs())
+    {
+      thread_signals.back() |= SignalFlags::Stop;
+      threads.clear();
+      return false;
+    }
     if (t.elapsed() > 0.5)
     {
       t.restart();
+      thread_signals.back() |= SignalFlags::PreventOutputAccess;
+      for (uint32_t i = 0; i < settings.thread_count; i++)
+      {
+        // wait for all threads to finish writing their pixel
+        while (thread_signals[i] & SignalFlags::PreventOutputAccess);
+      }
       preview_window->update_content(output->get_sdl_surface());
+      thread_signals.back() &= ~SignalFlags::PreventOutputAccess;
     }
     std::this_thread::yield();
   }
   preview_window->update_content(output->get_sdl_surface());
+  threads.clear();
   return true;
 }
