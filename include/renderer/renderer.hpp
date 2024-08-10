@@ -5,6 +5,12 @@
 #include "scene/scene_file_handler.hpp"
 #include "util/vec2.hpp"
 
+struct ImageBucket
+{
+  glm::uvec2 min;
+  glm::uvec2 max;
+};
+
 class Renderer
 {
 public:
@@ -19,11 +25,6 @@ public:
   void render();
 
 private:
-  struct ImageBucket
-  {
-    glm::uvec2 min;
-    glm::uvec2 max;
-  };
 
   SceneFile scene_file;
   std::string output_name;
@@ -32,8 +33,6 @@ private:
   std::shared_ptr<Output> output;
   std::unique_ptr<Window> preview_window;
 
-  glm::vec2 get_camera_coordinates(glm::uvec2 pixel) const;
-  void render_buckets(std::atomic<uint32_t>* bucket_idx) const;
   bool render_frame();
 };
 

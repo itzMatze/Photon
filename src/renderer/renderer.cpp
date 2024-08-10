@@ -4,6 +4,7 @@
 #include "util/timer.hpp"
 #include <atomic>
 #include <iostream>
+#include <memory>
 #include <thread>
 #include "image/image_file_handler.hpp"
 #include "renderer/color.hpp"
@@ -66,28 +67,28 @@ void Renderer::render()
   }
 }
 
-glm::vec2 Renderer::get_camera_coordinates(glm::uvec2 pixel) const
+glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool use_jittering)
 {
   // offset to either get a random position inside of the pixel square or the center of the pixel
-  glm::vec2 offset = settings.use_jittering ? glm::vec2(rng::random_float(), rng::random_float()) : glm::vec2(0.5);
-  glm::vec2 pixel_coordinates = (glm::vec2(pixel) + offset) / glm::vec2(scene_file.settings.resolution);
-  float aspect_ratio = float(scene_file.settings.resolution.y) / float(scene_file.settings.resolution.x);
+  glm::vec2 offset = use_jittering ? glm::vec2(rng::random_float(), rng::random_float()) : glm::vec2(0.5);
+  glm::vec2 pixel_coordinates = (glm::vec2(pixel) + offset) / glm::vec2(resolution);
+  float aspect_ratio = float(resolution.y) / float(resolution.x);
   pixel_coordinates.y *= aspect_ratio;
   pixel_coordinates.y += (1.0 - aspect_ratio) / 2.0;
   return pixel_coordinates;
 }
 
-void Renderer::render_buckets(std::atomic<uint32_t>* bucket_idx) const
+void render_buckets(const SceneFile* scene_file, const Renderer::Settings* renderer_settings, std::shared_ptr<Output> output, std::atomic<uint32_t>* bucket_idx, const std::vector<ImageBucket>* buckets)
 {
   // atomically get next bucket index in each iteration and check whether the index is still valid
-  for (uint32_t local_bucket_idx = bucket_idx->fetch_add(1); local_bucket_idx < buckets.size(); local_bucket_idx = bucket_idx->fetch_add(1))
+  for (uint32_t local_bucket_idx = bucket_idx->fetch_add(1); local_bucket_idx < buckets->size(); local_bucket_idx = bucket_idx->fetch_add(1))
   {
-    const ImageBucket& bucket = buckets[local_bucket_idx];
+    const ImageBucket& bucket = (*buckets)[local_bucket_idx];
     for (uint32_t y = bucket.min.y; y < bucket.max.y; y++)
     {
       for (uint32_t x = bucket.min.x; x < bucket.max.x; x++)
       {
-        Color color = whitted_ray_trace(scene_file, get_camera_coordinates({x, y}));
+        Color color = whitted_ray_trace(*scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, renderer_settings->use_jittering));
         // does not require synchronization because every thread writes different pixels
         output->set_pixel(x, y, color);
       }
@@ -99,7 +100,7 @@ bool Renderer::render_frame()
 {
   std::atomic<uint32_t> bucket_idx = 0;
   std::vector<std::jthread> threads;
-  for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&Renderer::render_buckets, this, &bucket_idx));
+  for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_idx, &buckets));
   // if the preview window should not be shown we can return immediately
   if (!preview_window) return true;
   // otherwise update the window at fixed time steps and after rendering is finished
