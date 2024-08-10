@@ -13,33 +13,34 @@ template<UIntEnum Enum>
 class NamedBitfield {
 public:
   constexpr NamedBitfield() : value(0) {}
+  constexpr NamedBitfield(std::underlying_type_t<Enum> value) : value(value) {}
   constexpr NamedBitfield(Enum value) : value(static_cast<std::underlying_type_t<Enum>>(value)) {}
 
   friend NamedBitfield<Enum> operator|(NamedBitfield<Enum> a, NamedBitfield<Enum> b)
   {
-    return static_cast<Enum>(static_cast<std::underlying_type_t<Enum>>(a.value) | static_cast<std::underlying_type_t<Enum>>(b.value));
+    return NamedBitfield<Enum>((a.value) | (b.value));
   }
 
   friend NamedBitfield<Enum>& operator|=(NamedBitfield<Enum> &a, NamedBitfield<Enum> b)
   {
-    a = a | b;
+    a.value = a.value | b.value;
     return a;
   }
 
   friend NamedBitfield<Enum> operator&(NamedBitfield<Enum> a, NamedBitfield<Enum> b)
   {
-    return static_cast<Enum>(static_cast<std::underlying_type_t<Enum>>(a) & static_cast<std::underlying_type_t<Enum>>(b));
+    return NamedBitfield<Enum>((a.value) & (b.value));
   }
 
   friend NamedBitfield<Enum>& operator&=(NamedBitfield<Enum> &a, NamedBitfield<Enum> b)
   {
-    a = a & b;
+    a.value = a.value & b.value;
     return a;
   }
 
   friend NamedBitfield<Enum> operator~(NamedBitfield<Enum> a)
   {
-    return static_cast<Enum>(~static_cast<std::underlying_type_t<Enum>>(a));
+    return NamedBitfield<Enum>(~(a.value));
   }
 
   operator bool() const
@@ -65,22 +66,22 @@ struct EnumTraits<EnumType> { \
 };
 
 template<UIntEnum Enum>
-inline std::enable_if<EnumTraits<Enum>::enable_operators, Enum>::type
+inline std::enable_if<EnumTraits<Enum>::enable_operators, NamedBitfield<Enum>>::type
 operator|(Enum a, Enum b)
 {
-  return static_cast<Enum>(static_cast<std::underlying_type_t<Enum>>(a) | static_cast<std::underlying_type_t<Enum>>(b));
+  return NamedBitfield<Enum>(static_cast<std::underlying_type_t<Enum>>(a) | static_cast<std::underlying_type_t<Enum>>(b));
 }
 
 template<UIntEnum Enum>
-inline std::enable_if<EnumTraits<Enum>::enable_operators, Enum>::type
+inline std::enable_if<EnumTraits<Enum>::enable_operators, NamedBitfield<Enum>>::type
 operator&(Enum a, Enum b)
 {
-  return static_cast<Enum>(static_cast<std::underlying_type_t<Enum>>(a) & static_cast<std::underlying_type_t<Enum>>(b));
+  return NamedBitfield<Enum>(static_cast<std::underlying_type_t<Enum>>(a) & static_cast<std::underlying_type_t<Enum>>(b));
 }
 
 template<UIntEnum Enum>
-inline std::enable_if<EnumTraits<Enum>::enable_operators, Enum>::type
+inline std::enable_if<EnumTraits<Enum>::enable_operators, NamedBitfield<Enum>>::type
 operator~(Enum a)
 {
-  return static_cast<Enum>(~static_cast<std::underlying_type_t<Enum>>(a));
+  return NamedBitfield<Enum>(~static_cast<std::underlying_type_t<Enum>>(a));
 }
