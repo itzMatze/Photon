@@ -7,14 +7,12 @@
 class Window
 {
 public:
-  Window() = default;
-  void init(int width, glm::uvec2 render_resolution);
-  void destroy();
+  Window(int width, glm::uvec2 render_resolution);
+  ~Window();
   void update_content(SDL_Surface* bitmap_surface);
   bool get_inputs();
 
 private:
-  bool initialized = false;
   glm::uvec2 render_resolution;
   SDL_Window* win = nullptr;
   SDL_Renderer* sdl_renderer = nullptr;

@@ -1,9 +1,7 @@
 #pragma once
 #include <string>
-#include "renderer/color.hpp"
 #include "renderer/output.hpp"
 #include "renderer/window.hpp"
-#include "scene/scene.hpp"
 #include "scene/scene_file_handler.hpp"
 #include "util/vec2.hpp"
 
@@ -13,11 +11,11 @@ public:
   struct Settings
   {
     uint32_t thread_count = 1;
-    uint32_t max_path_length = 16;
     bool use_jittering = false;
+    bool show_preview_window = true;
   };
   Renderer() = default;
-  void init(const SceneFile& scene_file, const std::string& name, const Settings& settings);
+  void init(SceneFile& scene_file, const std::string& name, const Settings& settings);
   void render();
 
 private:
@@ -27,16 +25,15 @@ private:
     glm::uvec2 max;
   };
 
-  std::shared_ptr<Scene> scene;
-  glm::uvec2 resolution;
+  SceneFile scene_file;
   std::string output_name;
   std::vector<ImageBucket> buckets;
   Settings settings;
-  Output output;
-  Window preview_window;
+  std::shared_ptr<Output> output;
+  std::unique_ptr<Window> preview_window;
 
-  bool render_frame();
-  void render_buckets(std::atomic<uint32_t>* bucket_idx);
   glm::vec2 get_camera_coordinates(glm::uvec2 pixel) const;
+  void render_buckets(std::atomic<uint32_t>* bucket_idx) const;
+  bool render_frame();
 };
 

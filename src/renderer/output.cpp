@@ -1,22 +1,17 @@
 #include "renderer/output.hpp"
 #include <SDL2/SDL_surface.h>
 
-void Output::init(glm::uvec2 resolution, OutputTargets targets)
+Output::Output(glm::uvec2 resolution, OutputTargets targets) : resolution(resolution), targets(targets)
 {
-  if (initialized) destroy();
-  this->resolution = resolution;
-  this->targets = targets;
   if (targets & OutputTargetFlags::ColorArray) pixels = std::vector<Color>(resolution.x * resolution.y);
   sdl_surface = SDL_CreateRGBSurface(0, resolution.x, resolution.y, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
   clear();
-  initialized = true;
 }
 
-void Output::destroy()
+Output::~Output()
 {
   SDL_FreeSurface(sdl_surface);
   sdl_surface = nullptr;
-  initialized = false;
 }
 
 void Output::clear()

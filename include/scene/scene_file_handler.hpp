@@ -6,6 +6,7 @@ struct Settings
 {
   glm::uvec2 resolution;
   uint32_t bucket_size;
+  uint32_t max_path_length = 16;
 };
 
 struct SceneFile

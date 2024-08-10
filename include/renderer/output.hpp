@@ -19,9 +19,8 @@ ENABLE_ENUM_OPERATORS(OutputTargetFlags);
 class Output
 {
 public:
-  Output() = default;
-  void init(glm::uvec2 resolution, OutputTargets targets = OutputTargetFlags::ColorArray);
-  void destroy();
+  Output(glm::uvec2 resolution, OutputTargets targets = OutputTargetFlags::ColorArray);
+  ~Output();
   void clear();
   void set_pixel(glm::uvec2 pixel, const Color& color);
   void set_pixel(uint32_t x, uint32_t y, const Color& color);
@@ -30,7 +29,6 @@ public:
   SDL_Surface* get_sdl_surface() const;
 
 private:
-  bool initialized = false;
   glm::uvec2 resolution;
   OutputTargets targets;
   std::vector<Color> pixels;

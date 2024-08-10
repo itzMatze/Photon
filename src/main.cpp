@@ -24,7 +24,7 @@ int main(int argc, char** argv)
   scene_file.settings.resolution = glm::uvec2(1920, 1080);
   scene_file.settings.bucket_size = 20;
   std::cout << "Scene created: " << t.restart<std::milli>() << "ms" << std::endl;
-  renderer.init(scene_file, "progression", {.thread_count = thread_count});
+  renderer.init(scene_file, "progression", {.thread_count = thread_count, .show_preview_window = true});
   std::cout << "Renderer initialized: " << t.restart<std::milli>() << "ms" << std::endl;
   renderer.render();
   std::cout << "Rendering finished: " << t.restart<std::milli>() << "ms" << std::endl;
