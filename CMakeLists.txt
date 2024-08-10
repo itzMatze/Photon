@@ -20,6 +20,7 @@ set(SOURCE_FILES
   src/renderer/output.cpp
   src/renderer/ray.cpp
   src/renderer/renderer.cpp
+  src/renderer/whitted_ray_tracer.cpp
   src/renderer/window.cpp
   src/scene/scene.cpp
   src/scene/scene_factory.cpp
