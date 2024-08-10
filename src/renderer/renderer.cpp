@@ -1,10 +1,12 @@
 #include "renderer/renderer.hpp"
-#include "renderer/output.hpp"
-#include "renderer/rendering_algorithms.hpp"
-#include "util/timer.hpp"
+
 #include <iostream>
 #include <memory>
 #include <thread>
+
+#include "renderer/output.hpp"
+#include "renderer/rendering_algorithms.hpp"
+#include "util/timer.hpp"
 #include "image/image_file_handler.hpp"
 #include "renderer/color.hpp"
 #include "scene/scene_file_handler.hpp"
@@ -92,7 +94,8 @@ void render_buckets(const SceneFile* scene_file,
                     std::shared_ptr<Output> output,
                     std::atomic<uint32_t>* bucket_idx,
                     const std::vector<ImageBucket>* buckets,
-                    std::vector<Signals>* thread_signals,
+                    Signals* signals_receiver,
+                    Signals* signals_sender,
                     uint32_t thread_idx)
 {
   // atomically get next bucket index in each iteration and check whether the index is still valid
@@ -103,13 +106,13 @@ void render_buckets(const SceneFile* scene_file,
     {
       for (uint32_t x = bucket.min.x; x < bucket.max.x; x++)
       {
-        if (thread_signals->back() & SignalFlags::Stop) return;
+        if ((*signals_receiver) & SignalFlags::Stop) return;
         Color color = whitted_ray_trace(*scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, renderer_settings->use_jittering));
         // wait if preview is currently updated
-        while (thread_signals->back() & SignalFlags::PreventOutputAccess);
-        (*thread_signals)[thread_idx] |= SignalFlags::PreventOutputAccess;
+        while ((*signals_receiver) & SignalFlags::PreventOutputAccess);
+        (*signals_sender) |= SignalFlags::PreventOutputAccess;
         output->set_pixel(x, y, color);
-        (*thread_signals)[thread_idx] &= ~SignalFlags::PreventOutputAccess;
+        (*signals_sender) &= ~SignalFlags::PreventOutputAccess;
       }
     }
   }
@@ -118,10 +121,15 @@ void render_buckets(const SceneFile* scene_file,
 bool Renderer::render_frame()
 {
   std::atomic<uint32_t> bucket_idx = 0;
+  // prevent false sharing by padding signals to 64 bytes
+  struct PaddedSignals {
+    Signals signals;
+    uint8_t pad[64 - sizeof(Signals)];
+  };
   // create enum bitfields to send signals from master thread to slaves and communicate back
-  std::vector<Signals> thread_signals(settings.thread_count + 1);
+  std::vector<PaddedSignals> thread_signals(settings.thread_count + 1);
   std::vector<std::jthread> threads;
-  for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_idx, &buckets, &thread_signals, i));
+  for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_idx, &buckets, &(thread_signals.back().signals), &(thread_signals[i].signals), i));
   // if the preview window should not be shown we can return immediately
   if (!preview_window)
   {
@@ -135,21 +143,21 @@ bool Renderer::render_frame()
     // window received exit command, stop rendering and return early
     if (!preview_window->get_inputs())
     {
-      thread_signals.back() |= SignalFlags::Stop;
+      thread_signals.back().signals |= SignalFlags::Stop;
       threads.clear();
       return false;
     }
     if (t.elapsed() > 0.5)
     {
       t.restart();
-      thread_signals.back() |= SignalFlags::PreventOutputAccess;
+      thread_signals.back().signals |= SignalFlags::PreventOutputAccess;
       for (uint32_t i = 0; i < settings.thread_count; i++)
       {
         // wait for all threads to finish writing their pixel
-        while (thread_signals[i] & SignalFlags::PreventOutputAccess);
+        while (thread_signals[i].signals & SignalFlags::PreventOutputAccess);
       }
       preview_window->update_content(output->get_sdl_surface());
-      thread_signals.back() &= ~SignalFlags::PreventOutputAccess;
+      thread_signals.back().signals &= ~SignalFlags::PreventOutputAccess;
     }
     std::this_thread::yield();
   }
