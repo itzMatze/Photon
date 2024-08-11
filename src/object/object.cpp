@@ -8,7 +8,6 @@
 Object::Object(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const SpatialConfiguration& spatial_conf, int32_t material_idx, bool compute_normals) :
   spatial_conf(spatial_conf), vertices(std::make_shared<std::vector<Vertex>>(vertices)), material_idx(material_idx)
 {
-  assert(material_idx >= 0);
   assert(indices.size() % 3 == 0);
   for (uint32_t i = 0; i < indices.size(); i += 3)
   {

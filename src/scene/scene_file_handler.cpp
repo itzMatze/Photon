@@ -51,7 +51,7 @@ void load_textures(const auto& rj_textures, SceneBuilder& scene_builder)
 {
   for (const auto& texture : rj_textures)
   {
-    const std::string texture_name = texture["name"].GetString();
+    const std::string texture_name = texture.GetString();
     const std::string path("assets/textures/" + texture_name);
     scene_builder.get_geometry().add_texture(load_image(path));
   }
@@ -62,7 +62,7 @@ void load_materials(const auto& rj_materials, SceneBuilder& scene_builder)
   for (const auto& material : rj_materials)
   {
     MaterialType type;
-    if (std::string("diffuse") == material["type"].GetString() || std::string("constant") == material["type"].GetString()) type = MaterialType::Diffuse;
+    if (std::string("diffuse") == material["type"].GetString()) type = MaterialType::Diffuse;
     else if (std::string("reflective") == material["type"].GetString()) type = MaterialType::Reflective;
     else if (std::string("refractive") == material["type"].GetString()) type = MaterialType::Refractive;
     MaterialParameters mat_params;
@@ -96,8 +96,7 @@ Object load_object(const auto& rj_object)
   {
     indices.emplace_back(rj_indices[i].GetInt());
   }
-  int32_t material_idx = -1;
-  if (rj_object.HasMember("material_index")) material_idx = rj_object["material_index"].GetInt();
+  uint32_t material_idx = rj_object["material_index"].GetUint();
   return Object(vertices, indices, SpatialConfiguration(), material_idx, true);
 }
 
@@ -129,7 +128,10 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
     if (rj_settings.HasMember("max_path_length")) scene_file.settings.max_path_length = rj_settings["max_path_length"].GetUint();
   }
 
-  scene_builder.get_camera().get_spatial_conf().set_position(get_vec3(doc["camera"]["position"]));
+  const auto& rj_cam = doc["camera"];
+  scene_builder.get_camera().get_spatial_conf().set_position(get_vec3(rj_cam["position"]));
+  if (rj_cam.HasMember("focal_length")) scene_builder.get_camera().set_focal_length(rj_cam["focal_length"].GetFloat());
+  if (rj_cam.HasMember("sensor_size")) scene_builder.get_camera().set_sensor_size(rj_cam["sensor_size"].GetFloat());
 
   if (doc.HasMember("lights"))
   {
