@@ -39,5 +39,5 @@ Camera::Camera(const CameraConfig& config)
 Ray Camera::get_ray(const glm::vec2 pixel) const
 {
   const glm::vec3 pixel_pos = upper_left_corner + (pixel.x * sensor_size * spatial_conf.get_x_axis()) - (pixel.y * sensor_size * spatial_conf.get_y_axis());
-  return Ray(spatial_conf.get_position(), glm::normalize(pixel_pos - spatial_conf.get_position()));
+  return Ray(pixel_pos, glm::normalize(pixel_pos - spatial_conf.get_position()));
 }
