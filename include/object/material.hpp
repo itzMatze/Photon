@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <vector>
 #include "object/texture.hpp"
 #include "renderer/hit_info.hpp"
@@ -16,6 +15,7 @@ enum class MaterialType
 
 struct MaterialParameters
 {
+  glm::vec3 albedo = glm::vec3(0.0f);
   int32_t albedo_texture_idx = -1;
   float ior = 1.5f;
   float roughness = 0.0f;
@@ -40,9 +40,9 @@ class Material
 {
 public:
   Material(MaterialType type, const MaterialParameters& params);
-  glm::vec3 get_albedo(const HitInfo& hit_info, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const;
-  glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const;
-  void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const;
+  glm::vec3 get_albedo(const HitInfo& hit_info, const std::vector<Texture>& textures) const;
+  glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir, const std::vector<Texture>& textures) const;
+  void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples, const std::vector<Texture>& textures) const;
   // is material dirac delta reflective or refractive
   bool is_delta() const;
   bool is_light_dependent() const;

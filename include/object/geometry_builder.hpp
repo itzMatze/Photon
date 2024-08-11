@@ -15,7 +15,6 @@ public:
   uint32_t add_object(const Object& object);
   uint32_t add_material(const Material& material);
   uint32_t add_texture(const Texture& texture);
-  uint32_t add_bitmap(const Bitmap& bitmap);
   InterpolatableData<Object>& get_interpolatable_objects();
   Object& get_object(uint32_t id);
   void remove_object(uint32_t id);
@@ -25,5 +24,4 @@ private:
   InterpolatableData<Object> objects;
   std::vector<Material> materials;
   std::vector<Texture> textures;
-  std::vector<Bitmap> bitmaps;
 };

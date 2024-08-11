@@ -17,12 +17,6 @@ uint32_t GeometryBuilder::add_texture(const Texture& texture)
   return textures.size() - 1;
 }
 
-uint32_t GeometryBuilder::add_bitmap(const Bitmap& bitmap)
-{
-  bitmaps.emplace_back(bitmap);
-  return bitmaps.size() - 1;
-}
-
 InterpolatableData<Object>& GeometryBuilder::get_interpolatable_objects()
 {
   return objects;
@@ -40,5 +34,5 @@ void GeometryBuilder::remove_object(uint32_t id)
 
 Geometry GeometryBuilder::build_geometry()
 {
-  return Geometry(objects, materials, textures, bitmaps);
+  return Geometry(objects, materials, textures);
 }

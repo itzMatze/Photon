@@ -2,8 +2,8 @@
 #include <vector>
 #include "util/interpolatable_data.hpp"
 
-Geometry::Geometry(const InterpolatableData<Object>& objects, const std::vector<Material>& materials, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps)
-  : objects(objects), materials(materials), textures(textures), bitmaps(bitmaps), bvh(objects.get_data(), 1)
+Geometry::Geometry(const InterpolatableData<Object>& objects, const std::vector<Material>& materials, const std::vector<Texture>& textures)
+  : objects(objects), materials(materials), textures(textures), bvh(objects.get_data(), 1)
 {}
 
 const InterpolatableData<Object>& Geometry::get_interpolatable_objects() const
@@ -21,11 +21,6 @@ const std::vector<Texture>& Geometry::get_textures() const
   return textures;
 }
 
-const std::vector<Bitmap>& Geometry::get_bitmaps() const
-{
-  return bitmaps;
-}
-
 bool Geometry::intersect(const Ray& ray, HitInfo& hit_info) const
 {
   hit_info.t = ray.config.max_t;
@@ -34,5 +29,5 @@ bool Geometry::intersect(const Ray& ray, HitInfo& hit_info) const
 
 Geometry interpolate(const Geometry& a, const Geometry& b, float weight)
 {
-  return Geometry(interpolate(a.get_interpolatable_objects(), b.get_interpolatable_objects(), weight), a.get_materials(), a.get_textures(), a.get_bitmaps());
+  return Geometry(interpolate(a.get_interpolatable_objects(), b.get_interpolatable_objects(), weight), a.get_materials(), a.get_textures());
 }

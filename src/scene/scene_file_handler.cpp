@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
-#include <unordered_map>
 
 #include "rapidjson/document.h"
 
@@ -48,67 +47,29 @@ void load_lights(const auto& rj_lights, SceneBuilder& scene_builder)
   }
 }
 
-void load_textures(const auto& rj_textures, std::unordered_map<std::string, std::shared_ptr<Texture>>& textures, const std::string& scene_path)
+void load_textures(const auto& rj_textures, SceneBuilder& scene_builder)
 {
   for (const auto& texture : rj_textures)
   {
     const std::string texture_name = texture["name"].GetString();
-    if (std::string("albedo") == texture["type"].GetString())
-    {
-      Texture::AlbedoParameters params{get_vec3(texture["albedo"])};
-      textures.emplace(texture_name, std::make_shared<Texture>(params));
-    }
-    else if (std::string("edges") == texture["type"].GetString())
-    {
-      Texture::EdgesParameters params;
-      params.edge = std::make_shared<Texture>(get_vec3(texture["edge_color"]));
-      params.center = std::make_shared<Texture>(get_vec3(texture["inner_color"]));
-      params.thickness = texture["edge_width"].GetFloat();
-      textures.emplace(texture_name, std::make_shared<Texture>(params));
-    }
-    else if (std::string("checker") == texture["type"].GetString())
-    {
-      Texture::CheckerParameters params;
-      params.even = std::make_shared<Texture>(get_vec3(texture["color_A"]));
-      params.odd = std::make_shared<Texture>(get_vec3(texture["color_B"]));
-      params.tile_size = texture["square_size"].GetFloat();
-      textures.emplace(texture_name, std::make_shared<Texture>(params));
-    }
-    else if (std::string("bitmap") == texture["type"].GetString())
-    {
-      Texture::BitmapParameters params;
-      std::filesystem::path path(scene_path);
-      path = path.parent_path();
-      path = path.concat(texture["file_path"].GetString());
-      load_image(path, params.bitmap, params.resolution);
-      textures.emplace(texture_name, std::make_shared<Texture>(params));
-    }
+    const std::string path("assets/textures/" + texture_name);
+    scene_builder.get_geometry().add_texture(load_image(path));
   }
 }
 
-void load_materials(const auto& rj_materials, SceneBuilder& scene_builder, std::unordered_map<std::string, std::shared_ptr<Texture>>& textures)
+void load_materials(const auto& rj_materials, SceneBuilder& scene_builder)
 {
   for (const auto& material : rj_materials)
   {
-    MaterialParameters mat_params;
-    if (material.HasMember("albedo"))
-    {
-      if (material["albedo"].IsString())
-      {
-        const std::string texture_name = material["albedo"].GetString();
-        mat_params.albedo_texture = textures.at(texture_name);
-      }
-      else
-      {
-        mat_params.albedo_texture = std::make_shared<Texture>(get_vec3(material["albedo"]));
-      }
-    }
-    if (material.HasMember("ior")) mat_params.ior = material["ior"].GetFloat();
-    if (material.HasMember("smooth_shading")) mat_params.smooth_shading = material["smooth_shading"].GetBool();
     MaterialType type;
     if (std::string("diffuse") == material["type"].GetString() || std::string("constant") == material["type"].GetString()) type = MaterialType::Diffuse;
     else if (std::string("reflective") == material["type"].GetString()) type = MaterialType::Reflective;
     else if (std::string("refractive") == material["type"].GetString()) type = MaterialType::Refractive;
+    MaterialParameters mat_params;
+    if (material.HasMember("albedo")) mat_params.albedo = get_vec3(material["albedo"]);
+    if (material.HasMember("albedo_texture_index")) mat_params.albedo_texture_idx = material["albedo_texture_index"].GetInt();
+    if (material.HasMember("ior")) mat_params.ior = material["ior"].GetFloat();
+    if (material.HasMember("smooth_shading")) mat_params.smooth_shading = material["smooth_shading"].GetBool();
     scene_builder.get_geometry().add_material(Material(type, mat_params));
   }
 }
@@ -150,7 +111,7 @@ void load_objects(const auto& rj_objects, SceneBuilder& scene_builder)
 
 int load_scene_file(const std::string& file_path, SceneFile& scene_file)
 {
-  const std::string path(std::string("../../Scenes/") + file_path);
+  const std::string path(std::string("assets/scenes/") + file_path);
   SceneBuilder scene_builder;
   rapidjson::Document doc;
   if (load_file(path, doc) != 0) return 1;
@@ -165,13 +126,8 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
       scene_file.settings.resolution.y = rj_settings["resolution"]["height"].GetUint();
     }
     if (rj_settings.HasMember("bucket_size")) scene_file.settings.bucket_size = rj_settings["bucket_size"].GetUint();
+    if (rj_settings.HasMember("max_path_length")) scene_file.settings.max_path_length = rj_settings["max_path_length"].GetUint();
   }
-
-  const auto& rj_cam_matrix = doc["camera"]["matrix"];
-  const glm::mat3 orientation(get_vec3(rj_cam_matrix, 0),
-                              get_vec3(rj_cam_matrix, 3),
-                              get_vec3(rj_cam_matrix, 6));
-  scene_builder.get_camera().get_spatial_conf().set_orientation(orientation);
 
   scene_builder.get_camera().get_spatial_conf().set_position(get_vec3(doc["camera"]["position"]));
 
@@ -180,30 +136,18 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
     load_lights(doc["lights"].GetArray(), scene_builder);
   }
 
-  std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
   if (doc.HasMember("textures"))
   {
-    load_textures(doc["textures"].GetArray(), textures, path);
+    load_textures(doc["textures"].GetArray(), scene_builder);
   }
 
   if (doc.HasMember("materials"))
   {
-    load_materials(doc["materials"].GetArray(), scene_builder, textures);
+    load_materials(doc["materials"].GetArray(), scene_builder);
   }
 
   load_objects(doc["objects"].GetArray(), scene_builder);
 
-  scene_builder.get_camera().set_focal_length(0.012);
   scene_file.scene = std::make_shared<Scene>(scene_builder.build_scene());
   return 0;
 }
-
-int load_object_file(const std::string& file_path, Object& object)
-{
-  const std::string path(std::string("../Scenes/") + file_path);
-  rapidjson::Document doc;
-  if (load_file(path, doc) != 0) return 1;
-  object = load_object(doc);
-  return 0;
-}
-

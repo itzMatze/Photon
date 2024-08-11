@@ -30,7 +30,7 @@ Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinate
         if (depth < scene_file.settings.max_path_length)
         {
           bsdf_samples.clear();
-          material.get_bsdf_samples(hit_info, path_vertex.ray.get_dir(), bsdf_samples, scene_file.scene->get_geometry().get_textures(), scene_file.scene->get_geometry().get_bitmaps());
+          material.get_bsdf_samples(hit_info, path_vertex.ray.get_dir(), bsdf_samples, scene_file.scene->get_geometry().get_textures());
           for (const auto& bsdf_sample : bsdf_samples)
           {
             const PathVertex next_path_vertex = PathVertex{bsdf_sample.ray, path_vertex.attenuation * bsdf_sample.attenuation, depth};
@@ -43,7 +43,7 @@ Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinate
         // if material does not depend on light (usually debug vis) just fetch albedo
         if (!material.is_light_dependent())
         {
-          color.value += material.get_albedo(hit_info, scene_file.scene->get_geometry().get_textures(), scene_file.scene->get_geometry().get_bitmaps());
+          color.value += material.get_albedo(hit_info, scene_file.scene->get_geometry().get_textures());
         }
         else
         {
@@ -57,7 +57,7 @@ Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinate
             if (scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info)) continue;
             const float light_surface = 4.0 * M_PI * light_distance * light_distance;
             glm::vec3 contribution = glm::vec3(light.get_intensity() / light_surface);
-            contribution *= path_vertex.attenuation * material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir, scene_file.scene->get_geometry().get_textures(), scene_file.scene->get_geometry().get_bitmaps());
+            contribution *= path_vertex.attenuation * material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir, scene_file.scene->get_geometry().get_textures());
             color.value += contribution;
           }
         }

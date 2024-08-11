@@ -16,5 +16,3 @@ struct SceneFile
 };
 
 int load_scene_file(const std::string& file_path, SceneFile& scene_file);
-int load_object_file(const std::string& file_path, Object& object);
-
