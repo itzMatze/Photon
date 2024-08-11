@@ -5,6 +5,8 @@
 #include <fstream>
 #include <memory>
 
+#include "glm/geometric.hpp"
+#include "glm/gtc/quaternion.hpp"
 #include "rapidjson/document.h"
 
 #include "image/image_file_handler.hpp"
@@ -130,6 +132,13 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
 
   const auto& rj_cam = doc["camera"];
   scene_builder.get_camera().get_spatial_conf().set_position(get_vec3(rj_cam["position"]));
+  if (rj_cam.HasMember("view_direction"))
+  {
+    const glm::vec3 view_dir = glm::normalize(get_vec3(rj_cam["view_direction"]));
+    glm::vec3 up(0.0, 1.0, 0.0);
+    if (rj_cam.HasMember("up")) up = glm::normalize(get_vec3(rj_cam["up"]));
+    scene_builder.get_camera().get_spatial_conf().set_orientation(glm::quatLookAt(view_dir, up));
+  }
   if (rj_cam.HasMember("focal_length")) scene_builder.get_camera().set_focal_length(rj_cam["focal_length"].GetFloat());
   if (rj_cam.HasMember("sensor_size")) scene_builder.get_camera().set_sensor_size(rj_cam["sensor_size"].GetFloat());
 
