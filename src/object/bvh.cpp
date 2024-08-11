@@ -1,13 +1,13 @@
 #include "object/bvh.hpp"
-#include "object/object.hpp"
+#include "object/object_instance.hpp"
 #include "object/triangle.hpp"
 
-template<> BVH<Object>::Node::Node(const std::vector<uint32_t>& indices, const std::vector<Object>& objects) : is_leaf(true), indices(indices)
+template<> BVH<ObjectInstance>::Node::Node(const std::vector<uint32_t>& indices, const std::vector<ObjectInstance>& object_instances) : is_leaf(true), indices(indices)
 {
   for (uint32_t i : indices)
   {
-    bounding_box.min = glm::min(bounding_box.min, objects[i].get_world_space_bounding_box().min);
-    bounding_box.max = glm::max(bounding_box.max, objects[i].get_world_space_bounding_box().max);
+    bounding_box.min = glm::min(bounding_box.min, object_instances[i].get_world_space_bounding_box().min);
+    bounding_box.max = glm::max(bounding_box.max, object_instances[i].get_world_space_bounding_box().max);
   }
 }
 

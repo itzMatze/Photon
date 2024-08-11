@@ -12,5 +12,5 @@ struct HitInfo
   glm::vec2 bary = glm::vec2(0.0);
   glm::vec2 tex_coords = glm::vec2(0.0);
   float t = std::numeric_limits<float>::max();
-  int32_t material_idx = -1;
+  int32_t material_id = -1;
 };

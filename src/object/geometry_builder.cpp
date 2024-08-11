@@ -1,38 +1,51 @@
 #include "object/geometry_builder.hpp"
+#include <memory>
+#include "object/material.hpp"
+#include "object/object_instance.hpp"
+#include "util/spatial_configuration.hpp"
+
+GeometryBuilder::GeometryBuilder() : objects(std::make_shared<std::vector<Object>>()), materials(std::make_shared<std::vector<Material>>()), textures(std::make_shared<std::vector<Texture>>())
+{}
 
 uint32_t GeometryBuilder::add_object(const Object& object)
 {
-  return objects.add_new_data(object);
+  objects->emplace_back(object);
+  return objects->size() - 1;
 }
 
-uint32_t GeometryBuilder::add_material(const Material& material)
+uint32_t GeometryBuilder::add_object_instance(uint32_t object_id, uint32_t material_id, const SpatialConfiguration& spatial_conf)
 {
-  materials.emplace_back(material);
-  return materials.size() - 1;
+  return instances.add_new_data(ObjectInstance(objects, object_id, material_id, spatial_conf));
+}
+
+uint32_t GeometryBuilder::add_material(const MaterialParameters& material)
+{
+  materials->emplace_back(Material(textures, material));
+  return materials->size() - 1;
 }
 
 uint32_t GeometryBuilder::add_texture(const Texture& texture)
 {
-  textures.emplace_back(texture);
-  return textures.size() - 1;
+  textures->emplace_back(texture);
+  return textures->size() - 1;
 }
 
-InterpolatableData<Object>& GeometryBuilder::get_interpolatable_objects()
+InterpolatableData<ObjectInstance>& GeometryBuilder::get_interpolatable_object_instances()
 {
-  return objects;
+  return instances;
 }
 
-Object& GeometryBuilder::get_object(uint32_t id)
+ObjectInstance& GeometryBuilder::get_object_instance(uint32_t id)
 {
-  return objects.get_element(id);
+  return instances.get_element(id);
 }
 
-void GeometryBuilder::remove_object(uint32_t id)
+void GeometryBuilder::remove_object_instance(uint32_t id)
 {
-  objects.remove_element(id);
+  instances.remove_element(id);
 }
 
 Geometry GeometryBuilder::build_geometry()
 {
-  return Geometry(objects, materials, textures);
+  return Geometry(objects, instances, materials, textures);
 }

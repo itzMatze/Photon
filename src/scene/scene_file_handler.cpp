@@ -1,7 +1,6 @@
 #include "scene/scene_file_handler.hpp"
 
 #include <iostream>
-#include <filesystem>
 #include <fstream>
 #include <memory>
 
@@ -63,16 +62,15 @@ void load_materials(const auto& rj_materials, SceneBuilder& scene_builder)
 {
   for (const auto& material : rj_materials)
   {
-    MaterialType type;
-    if (std::string("diffuse") == material["type"].GetString()) type = MaterialType::Diffuse;
-    else if (std::string("reflective") == material["type"].GetString()) type = MaterialType::Reflective;
-    else if (std::string("refractive") == material["type"].GetString()) type = MaterialType::Refractive;
     MaterialParameters mat_params;
+    if (std::string("diffuse") == material["type"].GetString()) mat_params.type = MaterialType::Diffuse;
+    else if (std::string("reflective") == material["type"].GetString()) mat_params.type = MaterialType::Reflective;
+    else if (std::string("refractive") == material["type"].GetString()) mat_params.type = MaterialType::Refractive;
     if (material.HasMember("albedo")) mat_params.albedo = get_vec3(material["albedo"]);
-    if (material.HasMember("albedo_texture_index")) mat_params.albedo_texture_idx = material["albedo_texture_index"].GetInt();
+    if (material.HasMember("albedo_texture_index")) mat_params.albedo_texture_id = material["albedo_texture_index"].GetInt();
     if (material.HasMember("ior")) mat_params.ior = material["ior"].GetFloat();
     if (material.HasMember("smooth_shading")) mat_params.smooth_shading = material["smooth_shading"].GetBool();
-    scene_builder.get_geometry().add_material(Material(type, mat_params));
+    scene_builder.get_geometry().add_material(mat_params);
   }
 }
 
@@ -98,8 +96,8 @@ Object load_object(const auto& rj_object)
   {
     indices.emplace_back(rj_indices[i].GetInt());
   }
-  uint32_t material_idx = rj_object["material_index"].GetUint();
-  return Object(vertices, indices, SpatialConfiguration(), material_idx, true);
+  uint32_t material_id = rj_object["material_index"].GetUint();
+  return Object(vertices, indices, true);
 }
 
 void load_objects(const auto& rj_objects, SceneBuilder& scene_builder)

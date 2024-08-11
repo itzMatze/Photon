@@ -14,6 +14,7 @@ set(SOURCE_FILES
   src/object/light.cpp
   src/object/material.cpp
   src/object/object.cpp
+  src/object/object_instance.cpp
   src/object/texture.cpp
   src/object/triangle.cpp
   src/renderer/camera.cpp
