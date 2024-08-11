@@ -5,7 +5,7 @@
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const glm::vec<2, T>& a)
 {
-  out << std::fixed << "(" << a.x << ", " << a.y << ", " << ")";
+  out << std::fixed << "(" << a.x << ", " << a.y << ")";
   return out;
 }
 
