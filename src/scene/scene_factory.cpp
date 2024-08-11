@@ -16,13 +16,14 @@ Scene create_single_triangle_scene()
     glm::vec3(1.0, -1.0, -5.0),
     glm::vec3(0.0, 1.0, -5.0)
   };
-  scene_builder.get_geometry().add_object(Object(vertices, {0, 1, 2}, SpatialConfiguration(), -1, true));
+  scene_builder.get_geometry().add_object(Object(vertices, {0, 1, 2}, SpatialConfiguration(), 0, true));
   return scene_builder.build_scene();
 }
 
 Scene create_triple_triangle_scene()
 {
   SceneBuilder scene_builder;
+  scene_builder.get_geometry().add_material(Material(MaterialType::Diffuse, MaterialParameters{.show_albedo = true}));
   const std::vector<Vertex> vertices{
     glm::vec3(-1.0, -1.0, -5.0),
     glm::vec3(1.0, -1.0, -5.0),
@@ -34,11 +35,11 @@ Scene create_triple_triangle_scene()
     glm::vec3(2.0, -1.0, -4.0),
     glm::vec3(1.0, 1.0, -4.0)
   };
-  scene_builder.get_geometry().add_object(Object(vertices, {0, 1, 2, 3, 4, 5, 6, 7, 8}, SpatialConfiguration(), -1, true));
+  scene_builder.get_geometry().add_object(Object(vertices, {0, 1, 2, 3, 4, 5, 6, 7, 8}, SpatialConfiguration(), 0, true));
   return scene_builder.build_scene();
 }
 
-Object add_star(const glm::vec3& center, float inner_radius, float tip_length, uint32_t tip_count) {
+Object add_star(const glm::vec3& center, float inner_radius, float tip_length, uint32_t tip_count, int32_t material_idx) {
   std::vector<Vertex> vertices{glm::vec3(0.0, 0.0, 0.0)};
   std::vector<uint32_t> indices;
   // the angle that one tip takes up
@@ -62,12 +63,13 @@ Object add_star(const glm::vec3& center, float inner_radius, float tip_length, u
   }
   SpatialConfiguration spatial_conf;
   spatial_conf.set_position(center);
-  return Object(vertices, indices, spatial_conf, -1, true);
+  return Object(vertices, indices, spatial_conf, material_idx, true);
 }
 
 Scene create_pyramid_star_scene()
 {
   SceneBuilder scene_builder;
+  scene_builder.get_geometry().add_material(Material(MaterialType::Diffuse, MaterialParameters{.show_albedo = true}));
   std::vector<uint32_t> object_ids;
   // pyramid
   {
@@ -90,14 +92,14 @@ Scene create_pyramid_star_scene()
     spatial_conf.rotate(45.0, 0.0, 0.0);
     // left pyramid
     spatial_conf.set_position(glm::vec3(-2.0, 0.0, -6.0));
-    object_ids.emplace_back(scene_builder.get_geometry().add_object(Object(vertices, indices, spatial_conf, -1, true)));
+    object_ids.emplace_back(scene_builder.get_geometry().add_object(Object(vertices, indices, spatial_conf, 0, true)));
     // right pyramid
     spatial_conf.set_position(glm::vec3(2.0, 0.0, -6.0));
-    object_ids.emplace_back(scene_builder.get_geometry().add_object(Object(vertices, indices, spatial_conf, -1, true)));
+    object_ids.emplace_back(scene_builder.get_geometry().add_object(Object(vertices, indices, spatial_conf, 0, true)));
   }
 
   // star
-  scene_builder.get_geometry().add_object(add_star(glm::vec3(0.0, 0.5, -4.0), 0.1, 0.5, 5));
+  scene_builder.get_geometry().add_object(add_star(glm::vec3(0.0, 0.5, -4.0), 0.1, 0.5, 5, 0));
 
   {
     scene_builder.new_keyframe(30);

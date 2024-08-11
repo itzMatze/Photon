@@ -42,7 +42,7 @@ public:
   Material(MaterialType type, const MaterialParameters& params);
   glm::vec3 get_albedo(const HitInfo& hit_info) const;
   glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const;
-  std::vector<BSDFSample> get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir) const;
+  void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const;
   // is material dirac delta reflective or refractive
   bool is_delta() const;
   bool is_light_dependent() const;

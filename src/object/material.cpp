@@ -34,11 +34,9 @@ float fresnel_schlick(float cos_theta, float n_1, float n_2)
     return F0 + (1.0 - F0) * std::pow(1.0 - cos_theta, 5.0);
 }
 
-std::vector<BSDFSample> Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir) const
+void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const
 {
   glm::vec3 normal = params.smooth_shading ? hit_info.normal : hit_info.geometric_normal;
-  // return list of direction that need to be traced next
-  std::vector<BSDFSample> samples;
   if (is_delta() && type == MaterialType::Reflective)
   {
     BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal))));
@@ -68,7 +66,6 @@ std::vector<BSDFSample> Material::get_bsdf_samples(const HitInfo& hit_info, cons
     else reflection_sample.attenuation = glm::vec3(1.0);
     samples.push_back(reflection_sample);
   }
-  return samples;
 }
 
 bool Material::is_delta() const
