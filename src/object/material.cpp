@@ -70,7 +70,7 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
 
 bool Material::is_delta() const
 {
-  return (type == MaterialType::Reflective || type == MaterialType::Refractive);
+  return (type == MaterialType::Reflective || type == MaterialType::Refractive) && (params.roughness == 0.0f);
 }
 
 bool Material::is_light_dependent() const

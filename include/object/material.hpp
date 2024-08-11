@@ -18,6 +18,7 @@ struct MaterialParameters
 {
   std::shared_ptr<Texture> albedo_texture = std::make_shared<Texture>(glm::vec3(0.99, 0.01, 0.55));
   float ior = 1.5f;
+  float roughness = 0.0f;
   bool smooth_shading = true;
   bool show_albedo = false;
   bool show_bary = false;

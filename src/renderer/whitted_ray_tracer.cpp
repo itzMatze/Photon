@@ -23,19 +23,22 @@ Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinate
     if (scene_file.scene->get_geometry().intersect(path_vertex.ray, hit_info))
     {
       const Material& material = scene_file.scene->get_geometry().get_materials()[hit_info.material_idx];
-      const uint32_t depth = path_vertex.depth + 1;
-      if (depth < scene_file.settings.max_path_length)
+      // whitted ray tracing can only handle perfectly transmissive, perfectly reflective, and diffuse materials
+      if (material.is_delta())
       {
-        bsdf_samples.clear();
-        material.get_bsdf_samples(hit_info, path_vertex.ray.get_dir(), bsdf_samples);
-        for (const auto& bsdf_sample : bsdf_samples)
+        const uint32_t depth = path_vertex.depth + 1;
+        if (depth < scene_file.settings.max_path_length)
         {
-          const PathVertex next_path_vertex = PathVertex{bsdf_sample.ray, path_vertex.attenuation * bsdf_sample.attenuation, depth};
-          path_vertices.push_back(next_path_vertex);
+          bsdf_samples.clear();
+          material.get_bsdf_samples(hit_info, path_vertex.ray.get_dir(), bsdf_samples);
+          for (const auto& bsdf_sample : bsdf_samples)
+          {
+            const PathVertex next_path_vertex = PathVertex{bsdf_sample.ray, path_vertex.attenuation * bsdf_sample.attenuation, depth};
+            path_vertices.push_back(next_path_vertex);
+          }
         }
       }
-      // if material is dirac delta reflective
-      if (!material.is_delta())
+      else
       {
         // if material does not depend on light (usually debug vis) just fetch albedo
         if (!material.is_light_dependent())
