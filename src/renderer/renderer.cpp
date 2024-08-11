@@ -61,18 +61,18 @@ void Renderer::render()
   if (!scene_file.scene->is_animated())
   {
     if (!render_frame()) return;
-    save_single_image(output->get_pixels(), output_name, scene_file.settings.resolution, FileType::png);
+    save_single_image(Bitmap(output->get_pixels(), scene_file.settings.resolution), output_name, FileType::png);
   }
   else
   {
-    ImageSeries image_series(output_name, scene_file.settings.resolution, FileType::png);
+    ImageSeries image_series(output_name, FileType::png);
     uint32_t frame_idx = 0;
     while (scene_file.scene->step())
     {
       Timer t;
       if (!render_frame()) return;
       std::cout << "frametime " << frame_idx << ": " << t.restart<std::milli>() << "ms" << std::endl;
-      image_series.save_image(output->get_pixels(), frame_idx);
+      image_series.save_image(Bitmap(output->get_pixels(), scene_file.settings.resolution), frame_idx);
       frame_idx++;
     }
   }

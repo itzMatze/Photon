@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(SDL2_DIR "${PROJECT_SOURCE_DIR}/dependencies/SDL2")
 
 set(SOURCE_FILES
+  src/image/bitmap.cpp
   src/image/image_file_handler.cpp
   src/object/aabb.cpp
   src/object/bvh.cpp

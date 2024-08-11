@@ -2,29 +2,29 @@
 #include <ctime>
 #include <fstream>
 #include <filesystem>
+#include <vector>
 #include "stb/stb_image.h"
 #include "stb/stb_image_write.h"
 
-void write_image(const std::vector<Color>& pixels, std::string image_path, const glm::uvec2 resolution, FileType type)
+void write_image(const Bitmap& bitmap, std::string image_path, FileType type)
 {
   if (type == FileType::png)
   {
     image_path.append(".png");
-    std::vector<uint32_t> hex_pixels;
-    for (const auto& color : pixels) hex_pixels.emplace_back(color.get_hex_color());
-    stbi_write_png(image_path.c_str(), resolution.x, resolution.y, 4, hex_pixels.data(), resolution.x * 4);
+    std::vector<uint32_t> hex_pixels = bitmap.get_hex_vector();
+    stbi_write_png(image_path.c_str(), bitmap.get_resolution().x, bitmap.get_resolution().y, 4, hex_pixels.data(), bitmap.get_resolution().x * 4);
   }
   else if (type == FileType::ppm)
   {
     image_path.append(".ppm");
     std::ofstream file(image_path, std::ios::out | std::ios::binary);
-    file << "P3\n" << resolution.x << " " << resolution.y << "\n" << 255 << "\n";
-    for (uint32_t y = 0; y < resolution.y; y++)
+    file << "P3\n" << bitmap.get_resolution().x << " " << bitmap.get_resolution().y << "\n" << 255 << "\n";
+    for (uint32_t y = 0; y < bitmap.get_resolution().y; y++)
     {
-      for (uint32_t x = 0; x < resolution.x; x++)
+      for (uint32_t x = 0; x < bitmap.get_resolution().x; x++)
       {
         // extract rgb values from hex representation and print to the file
-        uint32_t pixel = pixels[y * resolution.x + x].get_hex_color();
+        uint32_t pixel = bitmap.get(y, x).get_hex_color();
         file << (pixel & 0x000000ff) << " ";
         pixel >>= 8;
         file << (pixel & 0x000000ff) << " ";
@@ -37,7 +37,7 @@ void write_image(const std::vector<Color>& pixels, std::string image_path, const
   }
 }
 
-void save_single_image(const std::vector<Color>& pixels, const std::string& name, const glm::uvec2 resolution, FileType type)
+void save_single_image(const Bitmap& bitmap, const std::string& name, FileType type)
 {
   std::string image_path("images/" + name);
   std::filesystem::path path(image_path);
@@ -56,15 +56,15 @@ void save_single_image(const std::vector<Color>& pixels, const std::string& name
   std::strftime(time_chars, sizeof(time_chars), "%d-%m-%Y_%H-%M-%S", &local_time);
   std::string time_string(time_chars);
   image_path.append(time_string);
-  write_image(pixels, image_path, resolution, type);
+  write_image(bitmap, image_path, type);
 }
 
-void load_image(const std::string& path, std::vector<uint32_t>& bitmap, glm::uvec2& resolution)
+Bitmap load_image(const std::string& path)
 {
+  std::vector<uint32_t> pixel_vector;
   int width, height, channels;
   unsigned char* pixels = stbi_load(path.c_str(), &width, &height, &channels, 0);
   assert(channels == 3 || channels == 4);
-  resolution = glm::uvec2(width, height);
   for (uint32_t i = 0; i < width * height * channels; i += channels)
   {
     // if alpha channel is not there, set it to max value
@@ -75,19 +75,20 @@ void load_image(const std::string& path, std::vector<uint32_t>& bitmap, glm::uve
     color |= uint32_t(pixels[i + 1]);
     color <<= 8;
     color |= uint32_t(pixels[i]);
-    bitmap.emplace_back(color);
+    pixel_vector.emplace_back(color);
   }
   stbi_image_free(pixels);
+  return Bitmap(pixel_vector, width, height);
 }
 
-ImageSeries::ImageSeries(const std::string& directory, const glm::uvec2 resolution, FileType type) : dir("images/" + directory), resolution(resolution), type(type)
+ImageSeries::ImageSeries(const std::string& directory, FileType type) : dir("images/" + directory), type(type)
 {
   if (!std::filesystem::exists(dir)) std::filesystem::create_directory(dir);
 }
 
-void ImageSeries::save_image(const std::vector<Color>& pixels, uint32_t frame_idx)
+void ImageSeries::save_image(const Bitmap& bitmap, uint32_t frame_idx)
 {
   std::filesystem::path path(dir / std::to_string(frame_idx));
-  write_image(pixels, path.string(), resolution, type);
+  write_image(bitmap, path.string(), type);
 }
 

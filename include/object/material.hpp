@@ -16,7 +16,7 @@ enum class MaterialType
 
 struct MaterialParameters
 {
-  std::shared_ptr<Texture> albedo_texture = std::make_shared<Texture>(glm::vec3(0.99, 0.01, 0.55));
+  int32_t albedo_texture_idx = -1;
   float ior = 1.5f;
   float roughness = 0.0f;
   bool smooth_shading = true;
@@ -39,11 +39,10 @@ struct BSDFSample
 class Material
 {
 public:
-  Material();
   Material(MaterialType type, const MaterialParameters& params);
-  glm::vec3 get_albedo(const HitInfo& hit_info) const;
-  glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const;
-  void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const;
+  glm::vec3 get_albedo(const HitInfo& hit_info, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const;
+  glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const;
+  void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const;
   // is material dirac delta reflective or refractive
   bool is_delta() const;
   bool is_light_dependent() const;

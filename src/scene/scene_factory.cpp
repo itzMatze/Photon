@@ -10,7 +10,8 @@
 Scene create_single_triangle_scene()
 {
   SceneBuilder scene_builder;
-  scene_builder.get_geometry().add_material(Material(MaterialType::Diffuse, MaterialParameters{.show_albedo = true}));
+  scene_builder.get_geometry().add_texture(Texture(Texture::AlbedoParameters{glm::vec3(0.99, 0.01, 0.55)}));
+  scene_builder.get_geometry().add_material(Material(MaterialType::Diffuse, MaterialParameters{.albedo_texture_idx = 0, .show_albedo = true}));
   const std::vector<Vertex> vertices{
     glm::vec3(-1.0, -1.0, -5.0),
     glm::vec3(1.0, -1.0, -5.0),
@@ -23,7 +24,8 @@ Scene create_single_triangle_scene()
 Scene create_triple_triangle_scene()
 {
   SceneBuilder scene_builder;
-  scene_builder.get_geometry().add_material(Material(MaterialType::Diffuse, MaterialParameters{.show_albedo = true}));
+  scene_builder.get_geometry().add_texture(Texture(Texture::AlbedoParameters{glm::vec3(0.99, 0.01, 0.55)}));
+  scene_builder.get_geometry().add_material(Material(MaterialType::Diffuse, MaterialParameters{.albedo_texture_idx = 0, .show_albedo = true}));
   const std::vector<Vertex> vertices{
     glm::vec3(-1.0, -1.0, -5.0),
     glm::vec3(1.0, -1.0, -5.0),
@@ -69,7 +71,8 @@ Object add_star(const glm::vec3& center, float inner_radius, float tip_length, u
 Scene create_pyramid_star_scene()
 {
   SceneBuilder scene_builder;
-  scene_builder.get_geometry().add_material(Material(MaterialType::Diffuse, MaterialParameters{.show_albedo = true}));
+  scene_builder.get_geometry().add_texture(Texture(Texture::AlbedoParameters{glm::vec3(0.99, 0.01, 0.55)}));
+  scene_builder.get_geometry().add_material(Material(MaterialType::Diffuse, MaterialParameters{.albedo_texture_idx = 0, .show_albedo = true}));
   std::vector<uint32_t> object_ids;
   // pyramid
   {

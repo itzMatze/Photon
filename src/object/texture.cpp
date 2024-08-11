@@ -13,29 +13,12 @@ Texture::Texture(const BitmapParameters& bitmap_params) : type(TextureType::Bitm
 Texture::Texture(const CheckerParameters& checker_params) : type(TextureType::Checker), checker_params(checker_params)
 {}
 
-Texture::Texture(const EdgesParameters& edges_params) : type(TextureType::Edges), edges_params(edges_params)
-{}
-
 Texture::~Texture()
 {
-  switch (type)
-  {
-    case TextureType::Albedo:
-      return;
-    case TextureType::Bitmap:
-      return;
-    case TextureType::Checker:
-      checker_params.even = nullptr;
-      checker_params.odd = nullptr;
-      return;
-    case TextureType::Edges:
-      edges_params.edge = nullptr;
-      edges_params.center = nullptr;
-      return;
-  }
+  return;
 }
 
-glm::vec3 Texture::get_value(glm::vec2 bary, glm::vec2 tex_coords) const
+glm::vec3 Texture::get_value(glm::vec2 bary, glm::vec2 tex_coords, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const
 {
   switch (type)
   {
@@ -46,7 +29,7 @@ glm::vec3 Texture::get_value(glm::vec2 bary, glm::vec2 tex_coords) const
       glm::uvec2 idx = tex_coords * glm::vec2(bitmap_params.resolution);
       // invert image because textures are loaded upside down
       idx.y = bitmap_params.resolution.y - idx.y;
-      Color color(bitmap_params.bitmap[idx.y * bitmap_params.resolution.x + idx.x]);
+      Color color(bitmaps[bitmap_params.bitmap_idx].get(idx.x, idx.y));
       return color.value;
     }
     case TextureType::Checker:
@@ -56,23 +39,11 @@ glm::vec3 Texture::get_value(glm::vec2 bary, glm::vec2 tex_coords) const
       // modulo check with bit twiddling
       if ((tile_idx.x & 1u) == (tile_idx.y & 1))
       {
-        return checker_params.even->get_value(bary, tex_coords);
+        return textures[checker_params.even_texture_idx].get_value(bary, tex_coords, textures, bitmaps);
       }
       else
       {
-        return checker_params.odd->get_value(bary, tex_coords);
-      }
-    }
-    case TextureType::Edges:
-    {
-      // check if point is on the edge
-      if (bary.s < edges_params.thickness || bary.t < edges_params.thickness || (1 - bary.s - bary.t) < edges_params.thickness)
-      {
-        return edges_params.edge->get_value(bary, tex_coords);
-      }
-      else
-      {
-        return edges_params.center->get_value(bary, tex_coords);
+        return textures[checker_params.odd_texture_idx].get_value(bary, tex_coords, textures, bitmaps);
       }
     }
   }

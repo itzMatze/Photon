@@ -3,29 +3,26 @@
 #include "util/vec3.hpp"
 #include "glm/geometric.hpp"
 
-Material::Material() : type(MaterialType::Diffuse)
+Material::Material(MaterialType type, const MaterialParameters& params) : type(type), params(params)
 {
-  params.show_albedo = true;
+  assert(params.albedo_texture_idx >= 0);
 }
 
-Material::Material(MaterialType type, const MaterialParameters& params) : type(type), params(params)
-{}
-
-glm::vec3 Material::get_albedo(const HitInfo& hit_info) const
+glm::vec3 Material::get_albedo(const HitInfo& hit_info, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const
 {
   if (params.show_bary) return glm::vec3(hit_info.bary.s, hit_info.bary.t, 1.0);
   else if (params.show_normal && !params.smooth_shading) return glm::vec3((hit_info.geometric_normal + 1.0f) / 2.0f);
   else if (params.show_normal) return glm::vec3((hit_info.normal + 1.0f) / 2.0f);
   else if (params.show_tex_coords) return glm::vec3(hit_info.tex_coords.s, hit_info.tex_coords.t, 1.0);
-  else return params.albedo_texture->get_value(hit_info.bary, hit_info.tex_coords);
+  else return textures[params.albedo_texture_idx].get_value(hit_info.bary, hit_info.tex_coords, textures, bitmaps);
 }
 
-glm::vec3 Material::eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const
+glm::vec3 Material::eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const
 {
   // for dirac delta lobes every direction has a value of 0.0
   if (is_delta()) return glm::vec3(0.0, 0.0, 0.0);
   const float cos_theta = glm::dot(outgoing_dir, params.smooth_shading ? hit_info.normal : hit_info.geometric_normal);
-  return get_albedo(hit_info) * std::max(0.0f, cos_theta);
+  return get_albedo(hit_info, textures, bitmaps) * std::max(0.0f, cos_theta);
 }
 
 float fresnel_schlick(float cos_theta, float n_1, float n_2)
@@ -34,13 +31,13 @@ float fresnel_schlick(float cos_theta, float n_1, float n_2)
     return F0 + (1.0 - F0) * std::pow(1.0 - cos_theta, 5.0);
 }
 
-void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const
+void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples, const std::vector<Texture>& textures, const std::vector<Bitmap>& bitmaps) const
 {
   glm::vec3 normal = params.smooth_shading ? hit_info.normal : hit_info.geometric_normal;
   if (is_delta() && type == MaterialType::Reflective)
   {
     BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal))));
-    sample.attenuation = params.albedo_texture->get_value(hit_info.bary, hit_info.tex_coords);
+    sample.attenuation = textures[params.albedo_texture_idx].get_value(hit_info.bary, hit_info.tex_coords, textures, bitmaps);
     samples.push_back(sample);
   }
   else if (is_delta() && type == MaterialType::Refractive)

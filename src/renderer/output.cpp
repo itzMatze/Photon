@@ -52,4 +52,3 @@ SDL_Surface* Output::get_sdl_surface() const
   assert(targets & OutputTargetFlags::SDLSurface);
   return sdl_surface;
 }
-
