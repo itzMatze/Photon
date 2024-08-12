@@ -34,13 +34,13 @@ float fresnel_schlick(float cos_theta, float n_1, float n_2)
 void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const
 {
   glm::vec3 normal = params.smooth_shading ? hit_info.normal : hit_info.geometric_normal;
-  if (is_delta() && params.type == MaterialType::Reflective)
+  if (is_delta() && params.metallic == 1.0f)
   {
     BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal))));
     sample.attenuation = (*textures)[params.albedo_texture_id].get_value(hit_info.bary, hit_info.tex_coords);
     samples.push_back(sample);
   }
-  else if (is_delta() && params.type == MaterialType::Refractive)
+  else if (is_delta() && params.transmission == 1.0f)
   {
     // incident vector and normal do not align -> from air to transmissive material
     float ref_idx_one = 1.0;
@@ -67,7 +67,7 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
 
 bool Material::is_delta() const
 {
-  return (params.type == MaterialType::Reflective || params.type == MaterialType::Refractive) && (params.roughness == 0.0f);
+  return (params.metallic == 1.0f || params.transmission == 1.0f) && (params.roughness == 0.0f);
 }
 
 bool Material::is_light_dependent() const

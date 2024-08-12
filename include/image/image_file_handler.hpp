@@ -12,6 +12,7 @@ enum class FileType
 };
 
 void save_single_image(const Bitmap& bitmap, const std::string& name, FileType type = FileType::png);
+Bitmap load_image(const unsigned char* pixels, uint32_t width, uint32_t height, uint32_t channels);
 Bitmap load_image(const std::string& path);
 
 class ImageSeries

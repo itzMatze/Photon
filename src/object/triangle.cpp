@@ -55,6 +55,7 @@ bool Triangle::intersect(const Ray& ray, HitInfo& hit_info) const
   hit_info.bary.t = glm::length(glm::cross(hit_info.pos - v0.pos, v1.pos - v0.pos)) / glm::length(glm::cross(v1.pos - v0.pos, v2.pos - v0.pos));
   hit_info.geometric_normal = geometric_normal;
   hit_info.normal = glm::normalize(hit_info.bary.s * v1.normal + hit_info.bary.t * v2.normal + (1.0f - hit_info.bary.s - hit_info.bary.t) * v0.normal);
+  hit_info.albedo = hit_info.bary.s * v1.color.value + hit_info.bary.t * v2.color.value + (1.0f - hit_info.bary.s - hit_info.bary.t) * v0.color.value;
   hit_info.tex_coords = hit_info.bary.s * v1.tex_coords + hit_info.bary.t * v2.tex_coords + (1.0f - hit_info.bary.s - hit_info.bary.t) * v0.tex_coords;
   return true;
 }

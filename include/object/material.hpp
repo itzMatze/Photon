@@ -16,11 +16,14 @@ enum class MaterialType
 
 struct MaterialParameters
 {
-  MaterialType type;
   glm::vec3 albedo = glm::vec3(0.0f);
   int32_t albedo_texture_id = -1;
-  float ior = 1.5f;
+  glm::vec3 emission = glm::vec3(0.0f);
+  float emission_strength = 1.0f;
   float roughness = 0.0f;
+  float metallic = 0.0f;
+  float transmission = 0.0f;
+  float ior = 1.5f;
   bool smooth_shading = true;
   bool show_albedo = false;
   bool show_bary = false;
@@ -41,6 +44,7 @@ struct BSDFSample
 class Material
 {
 public:
+  Material() = default;
   Material(std::shared_ptr<const std::vector<Texture>> textures, const MaterialParameters& params);
   glm::vec3 get_albedo(const HitInfo& hit_info) const;
   glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const;

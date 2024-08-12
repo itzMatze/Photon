@@ -11,6 +11,7 @@ set(SOURCE_FILES
   src/object/bvh.cpp
   src/object/light.cpp
   src/object/material.cpp
+  src/object/model.cpp
   src/object/object.cpp
   src/object/object_instance.cpp
   src/object/texture.cpp
@@ -31,7 +32,8 @@ set(SOURCE_FILES
   src/util/spatial_configuration.cpp
   src/util/random_generator.cpp
   dependencies/stb/stb_image.cpp
-  dependencies/stb/stb_image_write.cpp)
+  dependencies/stb/stb_image_write.cpp
+  dependencies/tinygltf/tinygltf.cpp)
 
 add_executable(Photon src/main.cpp ${SOURCE_FILES})
 

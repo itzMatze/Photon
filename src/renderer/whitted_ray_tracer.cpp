@@ -22,7 +22,9 @@ Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinate
     path_vertices.pop_back();
     if (scene_file.scene->get_geometry().intersect(path_vertex.ray, hit_info))
     {
-      const Material& material = scene_file.scene->get_geometry().get_material(hit_info.material_id);
+      Material material;
+      if (hit_info.material_id == -1) material = Material();
+      else material = scene_file.scene->get_geometry().get_material(hit_info.material_id);
       // whitted ray tracing can only handle perfectly transmissive, perfectly reflective, and diffuse materials
       if (material.is_delta())
       {

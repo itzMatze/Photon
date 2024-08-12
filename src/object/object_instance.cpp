@@ -4,7 +4,7 @@
 ObjectInstance::ObjectInstance(uint32_t object_id) : object_id(object_id)
 {}
 
-ObjectInstance::ObjectInstance(std::shared_ptr<const std::vector<Object>> objects, uint32_t object_id, uint32_t material_id, const SpatialConfiguration& spatial_conf)
+ObjectInstance::ObjectInstance(std::shared_ptr<const std::vector<Object>> objects, uint32_t object_id, int32_t material_id, const SpatialConfiguration& spatial_conf)
   : objects(objects), object_id(object_id), material_id(material_id), spatial_conf(spatial_conf)
 {}
 
@@ -48,7 +48,7 @@ bool ObjectInstance::intersect(const Ray& ray, HitInfo& hit_info) const
     hit_info.pos = spatial_conf.transform_pos(hit_info.pos);
     hit_info.geometric_normal = glm::normalize(spatial_conf.transform_dir(hit_info.geometric_normal));
     hit_info.normal = glm::normalize(spatial_conf.transform_dir(hit_info.normal));
-    hit_info.material_id = material_id;
+    if (material_id >= 0) hit_info.material_id = material_id;
     return true;
   }
   return false;

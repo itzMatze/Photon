@@ -13,7 +13,7 @@ uint32_t GeometryBuilder::add_object(const Object& object)
   return objects->size() - 1;
 }
 
-uint32_t GeometryBuilder::add_object_instance(uint32_t object_id, uint32_t material_id, const SpatialConfiguration& spatial_conf)
+uint32_t GeometryBuilder::add_object_instance(uint32_t object_id, int32_t material_id, const SpatialConfiguration& spatial_conf)
 {
   return instances.add_new_data(ObjectInstance(objects, object_id, material_id, spatial_conf));
 }

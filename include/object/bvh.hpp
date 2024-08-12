@@ -152,6 +152,7 @@ public:
           if (objects[idx].intersect(ray, cur_hit_info) && cur_hit_info.t < hit_info.t)
           {
             hit_info = cur_hit_info;
+            hit_info.object_id = idx;
             if (ray.config.anyhit) return true;
           }
         }

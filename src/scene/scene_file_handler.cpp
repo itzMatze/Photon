@@ -63,13 +63,19 @@ void load_materials(const auto& rj_materials, SceneBuilder& scene_builder)
   for (const auto& material : rj_materials)
   {
     MaterialParameters mat_params;
-    if (std::string("diffuse") == material["type"].GetString()) mat_params.type = MaterialType::Diffuse;
-    else if (std::string("reflective") == material["type"].GetString()) mat_params.type = MaterialType::Reflective;
-    else if (std::string("refractive") == material["type"].GetString()) mat_params.type = MaterialType::Refractive;
     if (material.HasMember("albedo")) mat_params.albedo = get_vec3(material["albedo"]);
     if (material.HasMember("albedo_texture_index")) mat_params.albedo_texture_id = material["albedo_texture_index"].GetInt();
+    if (material.HasMember("emission")) mat_params.emission = get_vec3(material["emission"]);
+    if (material.HasMember("emission_strength")) mat_params.emission_strength = material["emission_strength"].GetFloat();
+    if (material.HasMember("roughness")) mat_params.roughness = material["roughness"].GetFloat();
+    if (material.HasMember("metallic")) mat_params.metallic = material["metallic"].GetFloat();
+    if (material.HasMember("transmission")) mat_params.transmission = material["transmission"].GetFloat();
     if (material.HasMember("ior")) mat_params.ior = material["ior"].GetFloat();
     if (material.HasMember("smooth_shading")) mat_params.smooth_shading = material["smooth_shading"].GetBool();
+    if (material.HasMember("show_albedo")) mat_params.show_albedo = material["show_albedo"].GetBool();
+    if (material.HasMember("show_bary")) mat_params.show_bary = material["show_bary"].GetBool();
+    if (material.HasMember("show_normal")) mat_params.show_normal = material["show_normal"].GetBool();
+    if (material.HasMember("show_tex_coords")) mat_params.show_tex_coords = material["show_tex_coords"].GetBool();
     scene_builder.get_geometry().add_material(mat_params);
   }
 }

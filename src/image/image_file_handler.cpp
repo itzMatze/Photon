@@ -59,12 +59,9 @@ void save_single_image(const Bitmap& bitmap, const std::string& name, FileType t
   write_image(bitmap, image_path, type);
 }
 
-Bitmap load_image(const std::string& path)
+Bitmap load_image(const unsigned char* pixels, uint32_t width, uint32_t height, uint32_t channels)
 {
   std::vector<uint32_t> pixel_vector;
-  int width, height, channels;
-  unsigned char* pixels = stbi_load(path.c_str(), &width, &height, &channels, 0);
-  assert(channels == 3 || channels == 4);
   for (uint32_t i = 0; i < width * height * channels; i += channels)
   {
     // if alpha channel is not there, set it to max value
@@ -77,8 +74,17 @@ Bitmap load_image(const std::string& path)
     color |= uint32_t(pixels[i]);
     pixel_vector.emplace_back(color);
   }
-  stbi_image_free(pixels);
   return Bitmap(pixel_vector, width, height);
+}
+
+Bitmap load_image(const std::string& path)
+{
+  int width, height, channels;
+  unsigned char* pixels = stbi_load(path.c_str(), &width, &height, &channels, 0);
+  assert(channels == 3 || channels == 4);
+  Bitmap bitmap = load_image(pixels, width, height, channels);
+  stbi_image_free(pixels);
+  return bitmap;
 }
 
 ImageSeries::ImageSeries(const std::string& directory, FileType type) : dir("images/tmp/" + directory), type(type)

@@ -13,7 +13,7 @@ class GeometryBuilder
 public:
   GeometryBuilder();
   uint32_t add_object(const Object& object);
-  uint32_t add_object_instance(uint32_t object_id, uint32_t material_id, const SpatialConfiguration& spatial_conf = SpatialConfiguration());
+  uint32_t add_object_instance(uint32_t object_id, int32_t material_id = -1, const SpatialConfiguration& spatial_conf = SpatialConfiguration());
   uint32_t add_material(const MaterialParameters& material);
   uint32_t add_texture(const Texture& texture);
   InterpolatableData<ObjectInstance>& get_interpolatable_object_instances();
