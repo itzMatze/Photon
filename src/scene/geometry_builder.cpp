@@ -1,4 +1,4 @@
-#include "object/geometry_builder.hpp"
+#include "scene/geometry_builder.hpp"
 #include <memory>
 #include "object/material.hpp"
 #include "object/object_instance.hpp"

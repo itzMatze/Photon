@@ -2,10 +2,10 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "object/geometry.hpp"
 #include "object/light.hpp"
 #include "renderer/camera.hpp"
 #include "renderer/color.hpp"
+#include "scene/geometry.hpp"
 #include "util/interpolatable_data.hpp"
 
 class Scene

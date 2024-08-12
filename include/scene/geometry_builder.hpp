@@ -1,10 +1,10 @@
 #pragma once
 
 #include <cstdint>
-#include "object/geometry.hpp"
 #include "object/material.hpp"
 #include "object/object.hpp"
 #include "object/texture.hpp"
+#include "scene/geometry.hpp"
 #include "util/interpolatable_data.hpp"
 #include "util/spatial_configuration.hpp"
 

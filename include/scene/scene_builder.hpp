@@ -1,10 +1,10 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "object/geometry_builder.hpp"
 #include "object/light.hpp"
 #include "renderer/camera.hpp"
 #include "renderer/color.hpp"
+#include "scene/geometry_builder.hpp"
 #include "scene/scene.hpp"
 #include "util/interpolatable_data.hpp"
 

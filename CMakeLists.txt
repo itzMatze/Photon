@@ -9,8 +9,6 @@ set(SOURCE_FILES
   src/image/image_file_handler.cpp
   src/object/aabb.cpp
   src/object/bvh.cpp
-  src/object/geometry.cpp
-  src/object/geometry_builder.cpp
   src/object/light.cpp
   src/object/material.cpp
   src/object/object.cpp
@@ -24,6 +22,8 @@ set(SOURCE_FILES
   src/renderer/renderer.cpp
   src/renderer/whitted_ray_tracer.cpp
   src/renderer/window.cpp
+  src/scene/geometry.cpp
+  src/scene/geometry_builder.cpp
   src/scene/scene.cpp
   src/scene/scene_factory.cpp
   src/scene/scene_builder.cpp

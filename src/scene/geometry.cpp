@@ -1,4 +1,4 @@
-#include "object/geometry.hpp"
+#include "scene/geometry.hpp"
 #include <vector>
 #include "object/object_instance.hpp"
 #include "util/interpolatable_data.hpp"
