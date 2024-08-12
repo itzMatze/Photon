@@ -96,7 +96,6 @@ Object load_object(const auto& rj_object)
   {
     indices.emplace_back(rj_indices[i].GetInt());
   }
-  uint32_t material_id = rj_object["material_index"].GetUint();
   return Object(vertices, indices, true);
 }
 
@@ -105,6 +104,19 @@ void load_objects(const auto& rj_objects, SceneBuilder& scene_builder)
   for (const auto& object : rj_objects)
   {
     scene_builder.get_geometry().add_object(load_object(object));
+  }
+}
+
+void load_instances(const auto& rj_instances, SceneBuilder& scene_builder)
+{
+  for (const auto& rj_instance : rj_instances)
+  {
+    uint32_t object_id = rj_instance["object_index"].GetUint();
+    uint32_t material_id = rj_instance["material_index"].GetUint();
+    SpatialConfiguration spatial_conf;
+    if (rj_instance.HasMember("position")) spatial_conf.set_position(get_vec3(rj_instance["position"]));
+    if (rj_instance.HasMember("orientation")) spatial_conf.rotate(get_vec3(rj_instance["orientation"]));
+    scene_builder.get_geometry().add_object_instance(object_id, material_id, spatial_conf);
   }
 }
 
@@ -156,6 +168,7 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
   }
 
   load_objects(doc["objects"].GetArray(), scene_builder);
+  load_instances(doc["instances"].GetArray(), scene_builder);
 
   scene_file.scene = std::make_shared<Scene>(scene_builder.build_scene());
   return 0;
