@@ -46,36 +46,15 @@ public:
         // every node must contain no more than `threshold` many elements
         if (node.indices.size() > threshold)
         {
-          done = false;
-          split(node, axis, objects);
+          if (split(node, axis, objects)) done = false;
         }
       }
       axis = (axis + 1) % 3;
     }
   }
 
-  void split(BVH<T>::Node& node, uint32_t axis, const std::vector<T>& objects)
+  void apply_split(BVH<T>::Node& node, const std::vector<T>& objects, std::vector<uint32_t>& indices_0, std::vector<uint32_t>& indices_1, std::vector<uint32_t>& common_indices)
   {
-    // split bounding box into two new ones at the specified axis
-    float mid = (node.bounding_box.max[axis] - node.bounding_box.min[axis]) / 2.0;
-    glm::vec3 p0 = node.bounding_box.min;
-    p0[axis] += mid;
-    glm::vec3 p1 = node.bounding_box.max;
-    p1[axis] -= mid;
-    AABB box_0(node.bounding_box.min, p1);
-    AABB box_1(p0, node.bounding_box.max);
-    // store which objects are contained in which child and which objects are contained in both
-    std::vector<uint32_t> indices_0;
-    std::vector<uint32_t> indices_1;
-    std::vector<uint32_t> common_indices;
-    for (uint32_t i : node.indices)
-    {
-      bool intersect_0 = objects[i].intersect(box_0);
-      bool intersect_1 = objects[i].intersect(box_1);
-      if (intersect_0 && intersect_1) common_indices.push_back(i);
-      else if (intersect_0) indices_0.push_back(i);
-      else if (intersect_1) indices_1.push_back(i);
-    }
     // distribute the objects as evenly as possible to the children
     int32_t diff = indices_0.size() - indices_1.size();
     uint32_t common_idx = 0;
@@ -107,6 +86,46 @@ public:
     node.children.right = nodes.size() + 1;
     if (indices_0.size() > 0) nodes.emplace_back(indices_0, objects);
     if (indices_1.size() > 0) nodes.emplace_back(indices_1, objects);
+  }
+
+  bool split(BVH<T>::Node& node, uint32_t axis, const std::vector<T>& objects)
+  {
+    // store which objects are contained in which child and which objects are contained in both
+    std::vector<uint32_t> indices_0;
+    std::vector<uint32_t> indices_1;
+    std::vector<uint32_t> common_indices;
+    // test all axis until one is found that is able to separate some objects
+    // prevent useless nodes and enable detection of endless computation
+    // due to all objects being put in the same node all the time caused by floating point errors
+    for (uint32_t i = 0; i < 3; i++)
+    {
+      indices_0.clear();
+      indices_1.clear();
+      common_indices.clear();
+      // split bounding box into two new ones at the specified axis
+      float mid = (node.bounding_box.max[axis] - node.bounding_box.min[axis]) / 2.0;
+      glm::vec3 p0 = node.bounding_box.min;
+      p0[axis] += mid;
+      glm::vec3 p1 = node.bounding_box.max;
+      p1[axis] -= mid;
+      AABB box_0(node.bounding_box.min, p1);
+      AABB box_1(p0, node.bounding_box.max);
+      for (uint32_t i : node.indices)
+      {
+        bool intersect_0 = objects[i].intersect(box_0);
+        bool intersect_1 = objects[i].intersect(box_1);
+        if (intersect_0 && intersect_1) common_indices.push_back(i);
+        else if (intersect_0) indices_0.push_back(i);
+        else if (intersect_1) indices_1.push_back(i);
+      }
+      if ((indices_0.size() > 0 && indices_1.size() > 0) || common_indices.size() > 0)
+      {
+        apply_split(node, objects, indices_0, indices_1, common_indices);
+        return true;
+      }
+      axis = (axis + 1) % 3;
+    }
+    return false;
   }
 
   bool intersect(const Ray& ray, HitInfo& hit_info, const std::vector<T>& objects) const
