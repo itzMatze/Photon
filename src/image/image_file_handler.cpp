@@ -39,7 +39,7 @@ void write_image(const Bitmap& bitmap, std::string image_path, FileType type)
 
 void save_single_image(const Bitmap& bitmap, const std::string& name, FileType type)
 {
-  std::string image_path("images/" + name);
+  std::string image_path("images/tmp/" + name);
   std::filesystem::path path(image_path);
   std::filesystem::path dir = path.parent_path();
   if (!dir.empty() && !std::filesystem::exists(dir)) {
@@ -81,7 +81,7 @@ Bitmap load_image(const std::string& path)
   return Bitmap(pixel_vector, width, height);
 }
 
-ImageSeries::ImageSeries(const std::string& directory, FileType type) : dir("images/" + directory), type(type)
+ImageSeries::ImageSeries(const std::string& directory, FileType type) : dir("images/tmp/" + directory), type(type)
 {
   if (!std::filesystem::exists(dir)) std::filesystem::create_directory(dir);
 }
