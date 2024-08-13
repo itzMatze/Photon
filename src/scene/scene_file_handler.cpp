@@ -6,6 +6,7 @@
 
 #include "glm/geometric.hpp"
 #include "glm/gtc/quaternion.hpp"
+#include "object/model.hpp"
 #include "rapidjson/document.h"
 
 #include "image/image_file_handler.hpp"
@@ -109,7 +110,8 @@ void load_objects(const auto& rj_objects, SceneBuilder& scene_builder)
 {
   for (const auto& object : rj_objects)
   {
-    scene_builder.get_geometry().add_object(load_object(object));
+    if (object.IsString()) GLTFModel::load(scene_builder, object.GetString());
+    else scene_builder.get_geometry().add_object(load_object(object));
   }
 }
 
@@ -118,7 +120,7 @@ void load_instances(const auto& rj_instances, SceneBuilder& scene_builder)
   for (const auto& rj_instance : rj_instances)
   {
     uint32_t object_id = rj_instance["object_index"].GetUint();
-    uint32_t material_id = rj_instance["material_index"].GetUint();
+    int32_t material_id = (rj_instance.HasMember("material_index")) ? rj_instance["material_index"].GetInt() : -1;
     SpatialConfiguration spatial_conf;
     if (rj_instance.HasMember("position")) spatial_conf.set_position(get_vec3(rj_instance["position"]));
     if (rj_instance.HasMember("orientation")) spatial_conf.rotate(get_vec3(rj_instance["orientation"]));
