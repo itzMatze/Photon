@@ -120,15 +120,9 @@ void process_mesh(SceneBuilder& scene_builder, const tinygltf::Mesh& mesh, const
         Vertex vertex;
         glm::vec4 tmp_pos = matrix * glm::vec4(glm::make_vec3(&pos_buffer[i * pos_stride]), 1.0f);
         vertex.pos = glm::vec3(tmp_pos.x / tmp_pos.w, tmp_pos.y / tmp_pos.w, tmp_pos.z / tmp_pos.w);
-        vertex.normal = glm::normalize(glm::make_vec3(&normal_buffer[i * normal_stride]));
-        if (color_buffer)
-        {
-          vertex.color = Color(glm::make_vec4(&color_buffer[i * color_stride]));
-        }
-        else
-        {
-          vertex.color = Color(1.0, 1.0, 1.0, 1.0);
-        }
+        glm::vec4 tmp_normal = glm::inverse(glm::transpose(matrix)) * glm::vec4(glm::normalize(glm::make_vec3(&normal_buffer[i * normal_stride])), 0.0f);
+        vertex.normal = glm::normalize(glm::vec3(tmp_normal));
+        vertex.color = color_buffer ? Color(glm::make_vec4(&color_buffer[i * color_stride])) : Color(1.0, 1.0, 1.0);
         vertex.tex_coords = tex_buffer ? glm::make_vec2(&tex_buffer[i * tex_stride]) : glm::vec2(-1.0f);
         model_data.vertices.push_back(vertex);
       }
@@ -186,7 +180,7 @@ void process_node(SceneBuilder& scene_builder, const tinygltf::Node& node, const
 int32_t load(SceneBuilder& scene_builder, const std::string& model_path, bool load_materials)
 {
   std::string path = std::string("assets/models/") + model_path;
-  std::cerr << "Loading glb: \"" << path << "\"" << std::endl;;
+  std::cerr << "Loading glb: \"" << path << "\"" << std::endl;
   tinygltf::TinyGLTF loader;
   tinygltf::Model model;
   std::string err;
