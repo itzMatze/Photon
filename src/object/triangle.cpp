@@ -1,8 +1,6 @@
 #include "object/triangle.hpp"
 #include "glm/geometric.hpp"
 
-#define EPSILON 0.0001
-
 Triangle::Triangle(uint32_t idx0, uint32_t idx1, uint32_t idx2, const std::shared_ptr<const std::vector<Vertex>> vertices) : vertices(vertices)
 {
   vertex_indices[0] = idx0;
@@ -28,31 +26,26 @@ bool Triangle::intersect(const Ray& ray, HitInfo& hit_info) const
   const Vertex& v0 = (*vertices)[vertex_indices[0]];
   const Vertex& v1 = (*vertices)[vertex_indices[1]];
   const Vertex& v2 = (*vertices)[vertex_indices[2]];
-  const float dot_n_dir = glm::dot(ray.get_dir(), geometric_normal);
-  // backface culling
-  if (ray.config.backface_culling && dot_n_dir >= 0.0) return false;
-  hit_info.t = (glm::dot(geometric_normal, v0.pos) - glm::dot(ray.origin, geometric_normal)) / dot_n_dir;
-  // hit is behind the ray or outside of allowed range
-  if (hit_info.t < 0.0 || hit_info.t > ray.config.max_t) return false;
+
+  const glm::vec3 edge1 = v1.pos - v0.pos;
+  const glm::vec3 edge2 = v2.pos - v0.pos;
+  const glm::vec3 pvec = glm::cross(ray.get_dir(), edge2);
+  const float det = glm::dot(edge1, pvec);
+  if (((ray.config.backface_culling || det > -0.0000001) && det < 0.0000001)) return false;
+  const float inv_det = 1.0 / det;
+
+  static constexpr float triangle_extent_epsilon = 0.0001f;
+  const glm::vec3 tvec = ray.origin - v0.pos;
+  hit_info.bary.s = glm::dot(tvec, pvec) * inv_det;
+  if (hit_info.bary.s < -triangle_extent_epsilon || hit_info.bary.s > (1.0 + triangle_extent_epsilon)) return false;
+
+  const glm::vec3 qvec = glm::cross(tvec, edge1);
+  hit_info.bary.t = glm::dot(ray.get_dir(), qvec) * inv_det;
+  if (hit_info.bary.t < -triangle_extent_epsilon || (hit_info.bary.s + hit_info.bary.t > (1.0 + triangle_extent_epsilon))) return false;
+
+  hit_info.t = glm::dot(edge2, qvec) * inv_det;
+  if (hit_info.t > ray.config.max_t || hit_info.t < 0.0) return false;
   hit_info.pos = ray.at(hit_info.t);
-  // check if point lies inside or outside of the triangle
-  {
-    const glm::vec3 e = glm::normalize(v1.pos - v0.pos);
-    const glm::vec3 vp = glm::normalize(hit_info.pos - v0.pos);
-    if (glm::dot(geometric_normal, glm::cross(e, vp)) < -EPSILON) return false;
-  }
-  {
-    const glm::vec3 e = glm::normalize(v2.pos - v1.pos);
-    const glm::vec3 vp = glm::normalize(hit_info.pos - v1.pos);
-    if (glm::dot(geometric_normal, glm::cross(e, vp)) < -EPSILON) return false;
-  }
-  {
-    const glm::vec3 e = glm::normalize(v0.pos - v2.pos);
-    const glm::vec3 vp = glm::normalize(hit_info.pos - v2.pos);
-    if (glm::dot(geometric_normal, glm::cross(e, vp)) < -EPSILON) return false;
-  }
-  hit_info.bary.s = glm::length(glm::cross(hit_info.pos - v0.pos, v2.pos - v0.pos)) / glm::length(glm::cross(v1.pos - v0.pos, v2.pos - v0.pos));
-  hit_info.bary.t = glm::length(glm::cross(hit_info.pos - v0.pos, v1.pos - v0.pos)) / glm::length(glm::cross(v1.pos - v0.pos, v2.pos - v0.pos));
   hit_info.geometric_normal = geometric_normal;
   hit_info.normal = glm::normalize(hit_info.bary.s * v1.normal + hit_info.bary.t * v2.normal + (1.0f - hit_info.bary.s - hit_info.bary.t) * v0.normal);
   hit_info.albedo = hit_info.bary.s * v1.color.value + hit_info.bary.t * v2.color.value + (1.0f - hit_info.bary.s - hit_info.bary.t) * v0.color.value;
@@ -63,8 +56,8 @@ bool Triangle::intersect(const Ray& ray, HitInfo& hit_info) const
 AABB Triangle::get_bounding_box() const
 {
   AABB bounding_box;
-  bounding_box.min = glm::min((*vertices)[vertex_indices[0]].pos, glm::min((*vertices)[vertex_indices[1]].pos, (*vertices)[vertex_indices[2]].pos));
-  bounding_box.max = glm::max((*vertices)[vertex_indices[0]].pos, glm::max((*vertices)[vertex_indices[1]].pos, (*vertices)[vertex_indices[2]].pos));
+  bounding_box.min = glm::min((*vertices)[vertex_indices[0]].pos, glm::min((*vertices)[vertex_indices[1]].pos, (*vertices)[vertex_indices[2]].pos)) - 0.0001f;
+  bounding_box.max = glm::max((*vertices)[vertex_indices[0]].pos, glm::max((*vertices)[vertex_indices[1]].pos, (*vertices)[vertex_indices[2]].pos)) + 0.0001f;
   return bounding_box;
 }
 
