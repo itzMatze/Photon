@@ -37,7 +37,7 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
   if (is_delta() && params.metallic == 1.0f)
   {
     BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal))));
-    sample.attenuation = (*textures)[params.albedo_texture_id].get_value(hit_info.bary, hit_info.tex_coords);
+    sample.attenuation = get_albedo(hit_info);
     samples.push_back(sample);
   }
   else if (is_delta() && params.transmission == 1.0f)
