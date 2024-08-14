@@ -155,7 +155,8 @@ bool Renderer::render_frame()
   }
   // otherwise update the window at fixed time steps and after rendering is finished
   Timer t;
-  while (bucket_idx.load() < buckets.size())
+  // each thread will increase the index once when querying it after the last bucket has been taken
+  while (bucket_idx.load() < buckets.size() + settings.thread_count)
   {
     // window received exit command, stop rendering and return early
     if (!preview_window->get_inputs())
