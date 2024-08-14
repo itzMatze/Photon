@@ -1,6 +1,7 @@
 #include "object/object.hpp"
 #include "object/triangle.hpp"
 #include "glm/geometric.hpp"
+#include "util/log.hpp"
 
 // only triangles are supported
 Object::Object(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, bool compute_normals) :
@@ -43,6 +44,7 @@ bool Object::intersect(const Ray& ray, HitInfo& hit_info) const
 void Object::init(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, bool compute_normals)
 {
   assert(indices.size() % 3 == 0);
+  spdlog::debug("Creating object with {} vertices and {} triangles", vertices.size(), indices.size() / 3);
   for (uint32_t i = 0; i < indices.size(); i += 3)
   {
     triangles.emplace_back(indices[i], indices[i + 1], indices[i + 2], this->vertices);
@@ -57,4 +59,5 @@ void Object::init(const std::vector<Vertex>& vertices, const std::vector<uint32_
     }
   }
   bvh = BVH<Triangle>(triangles, 1);
+  spdlog::debug("Successfully created object");
 }

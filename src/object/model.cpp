@@ -8,6 +8,8 @@
 #include "scene/scene_builder.hpp"
 #include "tinygltf/tiny_gltf.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "util/timer.hpp"
+#include "util/log.hpp"
 
 namespace GLTFModel
 {
@@ -180,19 +182,18 @@ void process_node(SceneBuilder& scene_builder, const tinygltf::Node& node, const
 int32_t load(SceneBuilder& scene_builder, const std::string& model_path, bool load_materials)
 {
   std::string path = std::string("assets/models/") + model_path;
-  std::cerr << "Loading glb: \"" << path << "\"" << std::endl;
+  Timer t;
+  phlog::debug("Loading glb \"{}\"", path);
   tinygltf::TinyGLTF loader;
   tinygltf::Model model;
   std::string err;
   std::string warn;
   if (!loader.LoadBinaryFromFile(&model, &err, &warn, path))
   {
-    std::cerr << "Warning: " << warn << std::endl;
-    std::cerr << "Error: " << err << std::endl;
+    phlog::error("Failed to load model \"{}\": {}", path, err);
     return -1;
   }
-  if (!warn.empty()) std::cerr << "Warning: " << warn << std::endl;
-  if (!err.empty()) std::cerr << "Error: " << err << std::endl;
+  if (!warn.empty()) phlog::warn("Warning: {}", warn);
 
   ModelData model_data;
   if (load_materials)
@@ -207,7 +208,7 @@ int32_t load(SceneBuilder& scene_builder, const std::string& model_path, bool lo
   {
     process_node(scene_builder, model.nodes[node_idx], model, glm::mat4(1.0f), model_data);
   }
-  std::cerr << "File loaded, creating object" << std::endl;
+  phlog::debug("Successfully loaded glb \"{}\" in {}ms", path, t.elapsed<std::milli>());
   return scene_builder.get_geometry().add_object(Object(model_data.vertices, model_data.indices, model_data.meshes));
 }
 } // namespace GLTFModel

@@ -5,18 +5,21 @@
 #include <vector>
 #include "stb/stb_image.h"
 #include "stb/stb_image_write.h"
+#include "util/log.hpp"
 
 void write_image(const Bitmap& bitmap, std::string image_path, FileType type)
 {
   if (type == FileType::png)
   {
     image_path.append(".png");
+    phlog::debug("Writing image to file \"{}\"", image_path);
     std::vector<uint32_t> hex_pixels = bitmap.get_hex_vector();
     stbi_write_png(image_path.c_str(), bitmap.get_resolution().x, bitmap.get_resolution().y, 4, hex_pixels.data(), bitmap.get_resolution().x * 4);
   }
   else if (type == FileType::ppm)
   {
     image_path.append(".ppm");
+    phlog::debug("Writing image to file \"{}\"", image_path);
     std::ofstream file(image_path, std::ios::out | std::ios::binary);
     file << "P3\n" << bitmap.get_resolution().x << " " << bitmap.get_resolution().y << "\n" << 255 << "\n";
     for (uint32_t y = 0; y < bitmap.get_resolution().y; y++)
@@ -35,6 +38,7 @@ void write_image(const Bitmap& bitmap, std::string image_path, FileType type)
     }
     file.close();
   }
+  phlog::debug("Successfully wrote image to file \"{}\"", image_path);
 }
 
 void save_single_image(const Bitmap& bitmap, const std::string& name, FileType type)
@@ -79,11 +83,13 @@ Bitmap load_image(const unsigned char* pixels, uint32_t width, uint32_t height, 
 
 Bitmap load_image(const std::string& path)
 {
+  phlog::debug("Loading image from file \"{}\"", path);
   int width, height, channels;
   unsigned char* pixels = stbi_load(path.c_str(), &width, &height, &channels, 0);
   assert(channels == 3 || channels == 4);
   Bitmap bitmap = load_image(pixels, width, height, channels);
   stbi_image_free(pixels);
+  phlog::debug("Successfully loaded image from file \"{}\"", path);
   return bitmap;
 }
 

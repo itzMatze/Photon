@@ -9,25 +9,29 @@
 #include "scene/scene_file_handler.hpp"
 #include "util/timer.hpp"
 #include "util/vec2.hpp"
+#include "util/log.hpp"
 
 static constexpr glm::uvec2 resolution(1920, 1080);
 
 int main(int argc, char** argv)
 {
+  std::vector<spdlog::sink_ptr> sinks;
+  sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+  sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_st>("photon.log", true));
+  auto combined_logger = std::make_shared<spdlog::logger>("default_logger", sinks.begin(), sinks.end());
+  spdlog::set_default_logger(combined_logger);
+  spdlog::set_level(spdlog::level::debug);
+  spdlog::set_pattern("[%Y-%m-%d %T.%e] [%L] %v");
+
   std::vector<Color> pixels;
   SceneFile scene_file;
   Renderer renderer;
   const uint32_t thread_count = std::thread::hardware_concurrency();
-  std::cerr << "Using " << thread_count << " threads" << std::endl;
   Timer t;
-  scene_file.scene = std::make_shared<Scene>(create_pyramid_star_scene());
-  scene_file.settings.resolution = glm::uvec2(1920, 1080);
-  scene_file.settings.bucket_size = 20;
-  std::cout << "Scene created: " << t.restart<std::milli>() << "ms" << std::endl;
-  renderer.init(scene_file, "progression", {.thread_count = thread_count, .show_preview_window = true});
-  std::cout << "Renderer initialized: " << t.restart<std::milli>() << "ms" << std::endl;
+  std::string scene_filename("scene0.phene");
+  if (load_scene_file(scene_filename, scene_file) != 0) return 1;
+  renderer.init(scene_file, "image", {.thread_count = thread_count, .show_preview_window = true});
   renderer.render();
-  std::cout << "Rendering finished: " << t.restart<std::milli>() << "ms" << std::endl;
   return 0;
 }
 

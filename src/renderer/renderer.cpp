@@ -12,6 +12,8 @@
 #include "scene/scene_file_handler.hpp"
 #include "util/random_generator.hpp"
 #include "util/vec2.hpp"
+#include "util/log.hpp"
+#include "util/timer.hpp"
 
 enum class SignalFlags : uint32_t
 {
@@ -25,6 +27,9 @@ ENABLE_ENUM_OPERATORS(SignalFlags);
 
 void Renderer::init(SceneFile& scene_file, const std::string& name, const Settings& settings)
 {
+  Timer t;
+  phlog::debug("Renderer initializing");
+  phlog::debug("Renderer using {} threads", settings.thread_count);
   this->settings = settings;
   this->scene_file = scene_file;
   output_name = name;
@@ -52,29 +57,41 @@ void Renderer::init(SceneFile& scene_file, const std::string& name, const Settin
       buckets.emplace_back(bucket_size * glm::uvec2(bucket_count.x, y), bucket_size * glm::uvec2(bucket_count.x, y + 1) + glm::uvec2(overflow_bucket_size.x, 0));
     }
   }
+  phlog::info("Successfully initialized renderer in {}ms", t.elapsed<std::milli>());
 }
 
 void Renderer::render()
 {
+  Timer t;
+  phlog::debug("Starting rendering");
   assert(scene_file.scene);
   assert(output);
   if (!scene_file.scene->is_animated())
   {
+    phlog::debug("Scene is not animated");
     if (!render_frame()) return;
+    phlog::debug("Successfully finished rendering in {}ms", t.restart<std::milli>());
+    phlog::debug("Saving image");
     save_single_image(Bitmap(output->get_pixels(), scene_file.settings.resolution), output_name, FileType::png);
+    phlog::debug("Successfully saved image in {}ms", t.restart<std::milli>());
   }
   else
   {
+    phlog::debug("Scene is animated");
     ImageSeries image_series(output_name, FileType::png);
     uint32_t frame_idx = 0;
     while (scene_file.scene->step())
     {
       Timer t;
+      phlog::debug("Rendering frame {}", frame_idx);
       if (!render_frame()) return;
-      std::cout << "frametime " << frame_idx << ": " << t.restart<std::milli>() << "ms" << std::endl;
+      phlog::debug("Successfully rendered frame {} in {}ms", frame_idx, t.restart<std::milli>());
+      phlog::debug("Saving frame {} to image", frame_idx);
       image_series.save_image(Bitmap(output->get_pixels(), scene_file.settings.resolution), frame_idx);
+      phlog::debug("Successfully saved frame {} to image in {}ms", frame_idx, t.restart<std::milli>());
       frame_idx++;
     }
+    phlog::debug("Successfully finished rendering in {}ms", t.restart<std::milli>());
   }
 }
 
@@ -143,6 +160,7 @@ bool Renderer::render_frame()
     // window received exit command, stop rendering and return early
     if (!preview_window->get_inputs())
     {
+      phlog::info("Received exit signal, aborting rendering");
       thread_signals.back().signals |= SignalFlags::Stop;
       threads.clear();
       return false;

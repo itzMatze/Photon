@@ -12,13 +12,15 @@
 #include "image/image_file_handler.hpp"
 #include "object/material.hpp"
 #include "scene/scene_builder.hpp"
+#include "util/log.hpp"
+#include "util/timer.hpp"
 
 int load_file(const std::string& path, rapidjson::Document& document)
 {
   std::ifstream file(path, std::ios::binary);
   if (!file.is_open())
   {
-    std::cerr << "Failed to open file: " << path << std::endl;
+    phlog::error("Failed to open file \"{}\"", path);
     return 1;
   };
   std::stringstream file_stream;
@@ -28,7 +30,7 @@ int load_file(const std::string& path, rapidjson::Document& document)
   document.Parse(file_content.c_str());
   if (document.HasParseError())
   {
-    std::cerr << "Failed to parse file: " << path << std::endl;
+    phlog::error("Failed to parse file \"{}\"", path);
     return 2;
   }
   return 0;
@@ -131,6 +133,8 @@ void load_instances(const auto& rj_instances, SceneBuilder& scene_builder)
 int load_scene_file(const std::string& file_path, SceneFile& scene_file)
 {
   const std::string path(std::string("assets/scenes/") + file_path);
+  Timer t;
+  phlog::debug("Loading scene from file \"{}\"", path);
   SceneBuilder scene_builder;
   rapidjson::Document doc;
   if (load_file(path, doc) != 0) return 1;
@@ -179,5 +183,6 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
   load_instances(doc["instances"].GetArray(), scene_builder);
 
   scene_file.scene = std::make_shared<Scene>(scene_builder.build_scene());
+  phlog::debug("Successfully loaded scene from file \"{}\" in {}ms", path, t.elapsed<std::milli>());
   return 0;
 }

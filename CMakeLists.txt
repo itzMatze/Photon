@@ -3,6 +3,7 @@ project(Photon)
 set(CMAKE_CXX_STANDARD 20)
 
 set(SDL2_DIR "${PROJECT_SOURCE_DIR}/dependencies/SDL2")
+set(SPDLOG_DIR "${PROJECT_SOURCE_DIR}/dependencies/spdlog")
 
 set(SOURCE_FILES
   src/image/bitmap.cpp
@@ -39,7 +40,11 @@ add_executable(Photon src/main.cpp ${SOURCE_FILES})
 
 target_include_directories(Photon PRIVATE "${PROJECT_SOURCE_DIR}/include"
   "${PROJECT_SOURCE_DIR}/dependencies/"
-  "${SDL2_DIR}/include")
+  "${SDL2_DIR}/include",
+  "${SPDLOG_DIR}/include")
 
 add_subdirectory("${SDL2_DIR}")
 target_link_libraries(Photon SDL2)
+
+add_subdirectory("${SPDLOG_DIR}")
+target_link_libraries(Photon spdlog::spdlog)

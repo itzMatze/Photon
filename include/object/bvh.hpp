@@ -12,6 +12,43 @@ template<typename T>
 class BVH
 {
 public:
+  BVH() = default;
+  BVH(const std::vector<T>& objects, uint32_t threshold = 1);
+
+  bool intersect(const Ray& ray, HitInfo& hit_info, const std::vector<T>& objects) const
+  {
+    const float previous_closest = hit_info.t;
+    std::stack<int32_t> nodes_to_test;
+    // add root node as initial node
+    nodes_to_test.push(0);
+    HitInfo cur_hit_info;
+    while (!nodes_to_test.empty())
+    {
+      const Node& node = nodes[nodes_to_test.top()];
+      nodes_to_test.pop();
+      if (!node.is_leaf && node.bounding_box.intersect(ray))
+      {
+        nodes_to_test.push(node.children.left);
+        nodes_to_test.push(node.children.right);
+      }
+      else
+      {
+        // if node is a leaf test the contained objects
+        for (const uint32_t idx : node.indices)
+        {
+          if (objects[idx].intersect(ray, cur_hit_info) && cur_hit_info.t < hit_info.t)
+          {
+            hit_info = cur_hit_info;
+            hit_info.object_id = idx;
+            if (ray.config.anyhit) return true;
+          }
+        }
+      }
+    }
+    return hit_info.t < previous_closest;
+  }
+
+private:
   struct Node
   {
     Node(const std::vector<uint32_t>& indices, const std::vector<T>& objects);
@@ -26,8 +63,7 @@ public:
     std::vector<uint32_t> indices;
   };
 
-  BVH() = default;
-  BVH(const std::vector<T>& objects, uint32_t threshold = 1)
+  void init(const std::vector<T>& objects, uint32_t threshold)
   {
     std::vector<uint32_t> indices(objects.size());
     std::iota(indices.begin(), indices.end(), 0);
@@ -126,39 +162,6 @@ public:
       axis = (axis + 1) % 3;
     }
     return false;
-  }
-
-  bool intersect(const Ray& ray, HitInfo& hit_info, const std::vector<T>& objects) const
-  {
-    const float previous_closest = hit_info.t;
-    std::stack<int32_t> nodes_to_test;
-    // add root node as initial node
-    nodes_to_test.push(0);
-    HitInfo cur_hit_info;
-    while (!nodes_to_test.empty())
-    {
-      const Node& node = nodes[nodes_to_test.top()];
-      nodes_to_test.pop();
-      if (!node.is_leaf && node.bounding_box.intersect(ray))
-      {
-        nodes_to_test.push(node.children.left);
-        nodes_to_test.push(node.children.right);
-      }
-      else
-      {
-        // if node is a leaf test the contained objects
-        for (const uint32_t idx : node.indices)
-        {
-          if (objects[idx].intersect(ray, cur_hit_info) && cur_hit_info.t < hit_info.t)
-          {
-            hit_info = cur_hit_info;
-            hit_info.object_id = idx;
-            if (ray.config.anyhit) return true;
-          }
-        }
-      }
-    }
-    return hit_info.t < previous_closest;
   }
 
   std::vector<Node> nodes;
