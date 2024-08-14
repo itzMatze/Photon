@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <unordered_map>
 
 #include "glm/geometric.hpp"
 #include "glm/gtc/quaternion.hpp"
@@ -51,23 +52,30 @@ void load_lights(const auto& rj_lights, SceneBuilder& scene_builder)
   }
 }
 
-void load_textures(const auto& rj_textures, SceneBuilder& scene_builder)
+static constexpr std::string texture_key_prefix("texture: ");
+static constexpr std::string material_key_prefix("material: ");
+static constexpr std::string object_key_prefix("object: ");
+
+void load_textures(const auto& rj_textures, SceneBuilder& scene_builder, std::unordered_map<std::string, uint32_t>& indices_map)
 {
   for (const auto& texture : rj_textures)
   {
-    const std::string texture_name = texture.GetString();
-    const std::string path("assets/textures/" + texture_name);
-    scene_builder.get_geometry().add_texture(load_image(path));
+    const std::string texture_key = texture_key_prefix + texture["name"].GetString();
+    const std::string texture_file = texture["file"].GetString();
+    const std::string path("assets/textures/" + texture_file);
+    const uint32_t texture_id = scene_builder.get_geometry().add_texture(load_image(path));
+    PH_ASSERT(indices_map.emplace(texture_key, texture_id).second, "Duplicate texture name!");
   }
 }
 
-void load_materials(const auto& rj_materials, SceneBuilder& scene_builder)
+void load_materials(const auto& rj_materials, SceneBuilder& scene_builder, std::unordered_map<std::string, uint32_t>& indices_map)
 {
   for (const auto& material : rj_materials)
   {
     MaterialParameters mat_params;
+    const std::string material_key = material_key_prefix + material["name"].GetString();
     if (material.HasMember("albedo")) mat_params.albedo = get_vec3(material["albedo"]);
-    if (material.HasMember("albedo_texture_index")) mat_params.albedo_texture_id = material["albedo_texture_index"].GetInt();
+    if (material.HasMember("albedo_texture_name")) mat_params.albedo_texture_id = indices_map.at(texture_key_prefix + material["albedo_texture_name"].GetString());
     if (material.HasMember("emission")) mat_params.emission = get_vec3(material["emission"]);
     if (material.HasMember("emission_strength")) mat_params.emission_strength = material["emission_strength"].GetFloat();
     if (material.HasMember("roughness")) mat_params.roughness = material["roughness"].GetFloat();
@@ -79,7 +87,8 @@ void load_materials(const auto& rj_materials, SceneBuilder& scene_builder)
     if (material.HasMember("show_bary")) mat_params.show_bary = material["show_bary"].GetBool();
     if (material.HasMember("show_normal")) mat_params.show_normal = material["show_normal"].GetBool();
     if (material.HasMember("show_tex_coords")) mat_params.show_tex_coords = material["show_tex_coords"].GetBool();
-    scene_builder.get_geometry().add_material(mat_params);
+    const uint32_t material_id = scene_builder.get_geometry().add_material(mat_params);
+    PH_ASSERT(indices_map.emplace(material_key, material_id).second, "Duplicate material name!");
   }
 }
 
@@ -108,24 +117,36 @@ Object load_object(const auto& rj_object)
   return Object(vertices, indices, true);
 }
 
-void load_objects(const auto& rj_objects, SceneBuilder& scene_builder)
+void load_objects(const auto& rj_objects, SceneBuilder& scene_builder, std::unordered_map<std::string, uint32_t>& indices_map)
 {
   for (const auto& object : rj_objects)
   {
-    if (object.IsString()) GLTFModel::load(scene_builder, object.GetString());
-    else scene_builder.get_geometry().add_object(load_object(object));
+    const std::string object_key = object_key_prefix + object["name"].GetString();
+    if (object.HasMember("model"))
+    {
+      const int32_t object_id = GLTFModel::load(scene_builder, object["model"].GetString());
+      PH_ASSERT(object_id >= 0, "Failed to load model!");
+      PH_ASSERT(indices_map.emplace(object_key, object_id).second, "Duplicate object name!");
+    }
+    else
+    {
+      const uint32_t object_id = scene_builder.get_geometry().add_object(load_object(object));
+      PH_ASSERT(indices_map.emplace(object_key, object_id).second, "Duplicate object name!");
+    }
   }
 }
 
-void load_instances(const auto& rj_instances, SceneBuilder& scene_builder)
+void load_instances(const auto& rj_instances, SceneBuilder& scene_builder, std::unordered_map<std::string, uint32_t>& indices_map)
 {
   for (const auto& rj_instance : rj_instances)
   {
-    uint32_t object_id = rj_instance["object_index"].GetUint();
-    int32_t material_id = (rj_instance.HasMember("material_index")) ? rj_instance["material_index"].GetInt() : -1;
+    const uint32_t object_id = indices_map.at(std::string("object: ") + rj_instance["object_name"].GetString());
+    int32_t material_id = -1;
+    if (rj_instance.HasMember("material_name")) material_id = indices_map.at(material_key_prefix + rj_instance["material_name"].GetString());
     SpatialConfiguration spatial_conf;
     if (rj_instance.HasMember("position")) spatial_conf.set_position(get_vec3(rj_instance["position"]));
     if (rj_instance.HasMember("orientation")) spatial_conf.rotate(get_vec3(rj_instance["orientation"]));
+    if (rj_instance.HasMember("scale")) spatial_conf.set_scale(rj_instance["scale"].GetFloat());
     scene_builder.get_geometry().add_object_instance(object_id, material_id, spatial_conf);
   }
 }
@@ -169,18 +190,19 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
     load_lights(doc["lights"].GetArray(), scene_builder);
   }
 
+  std::unordered_map<std::string, uint32_t> indices_map;
   if (doc.HasMember("textures"))
   {
-    load_textures(doc["textures"].GetArray(), scene_builder);
+    load_textures(doc["textures"].GetArray(), scene_builder, indices_map);
   }
 
   if (doc.HasMember("materials"))
   {
-    load_materials(doc["materials"].GetArray(), scene_builder);
+    load_materials(doc["materials"].GetArray(), scene_builder, indices_map);
   }
 
-  load_objects(doc["objects"].GetArray(), scene_builder);
-  load_instances(doc["instances"].GetArray(), scene_builder);
+  load_objects(doc["objects"].GetArray(), scene_builder, indices_map);
+  load_instances(doc["instances"].GetArray(), scene_builder, indices_map);
 
   scene_file.scene = std::make_shared<Scene>(scene_builder.build_scene());
   phlog::info("Successfully loaded scene from file \"{}\" in {}ms", path, t.elapsed<std::milli>());
