@@ -18,6 +18,9 @@ template<> BVH<ObjectInstance>::Node::Node(int32_t indices_offset, int32_t indic
     bounding_box.min = glm::min(bounding_box.min, object_instances[indices[i]].get_world_space_bounding_box().min);
     bounding_box.max = glm::max(bounding_box.max, object_instances[indices[i]].get_world_space_bounding_box().max);
   }
+  // add bias so we do not miss a bounding box due to floating point
+  bounding_box.min -= 0.001f;
+  bounding_box.max += 0.001f;
 }
 
 template<> BVH<Triangle>::BVH(const std::vector<Triangle>& objects, uint32_t threshold)
@@ -38,4 +41,7 @@ template<> BVH<Triangle>::Node::Node(int32_t indices_offset, int32_t indices_cou
       bounding_box.max = glm::max(bounding_box.max, triangles[indices[i]].get_triangle_vertex(v).pos);
     }
   }
+  // add bias so we do not miss a bounding box due to floating point
+  bounding_box.min -= 0.001f;
+  bounding_box.max += 0.001f;
 }

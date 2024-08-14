@@ -136,7 +136,9 @@ private:
     {
       // store which objects are contained in which child and which objects are contained in both
       // use child_0: 0; common: 1; child_1: 2 for easy indexing when sorting into buckets
-      std::vector<int8_t> classifications(nodes[node_idx].indices_count, -1);
+      // due to floating point it might happen that an object cannot be assigned to any child
+      // assign those to both for even distribution to child nodes
+      std::vector<int8_t> classifications(nodes[node_idx].indices_count, 1);
       uint32_t child_0_count = 0;
       uint32_t child_1_count = 0;
       uint32_t common_count = 0;
@@ -169,8 +171,6 @@ private:
           child_1_count++;
         }
       }
-      assert(classifications.size() == child_0_count + child_1_count + common_count);
-      assert(classifications.size() == nodes[node_idx].indices_count);
       if ((child_0_count > 0 && child_1_count > 0) || common_count > 0)
       {
         apply_split(node_idx, objects, classifications, child_0_count, child_1_count, common_count);
