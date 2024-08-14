@@ -70,7 +70,7 @@ void Renderer::render()
   {
     phlog::debug("Scene is not animated");
     if (!render_frame()) return;
-    phlog::debug("Successfully finished rendering in {}ms", t.restart<std::milli>());
+    phlog::info("Successfully finished rendering in {}ms", t.restart<std::milli>());
     phlog::debug("Saving image");
     save_single_image(Bitmap(output->get_pixels(), scene_file.settings.resolution), output_name, FileType::png);
     phlog::debug("Successfully saved image in {}ms", t.restart<std::milli>());
@@ -91,7 +91,7 @@ void Renderer::render()
       phlog::debug("Successfully saved frame {} to image in {}ms", frame_idx, t.restart<std::milli>());
       frame_idx++;
     }
-    phlog::debug("Successfully finished rendering in {}ms", t.restart<std::milli>());
+    phlog::info("Successfully finished rendering in {}ms", t.restart<std::milli>());
   }
 }
 
