@@ -47,6 +47,7 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
   }
   else if (is_delta() && params.transmission == 1.0f)
   {
+    glm::vec3 attenuation(1.0f);
     // incident vector and normal do not align -> from air to transmissive material
     float ref_idx_one = 1.0;
     float ref_idx_two = params.ior;
@@ -56,13 +57,15 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
       normal = -normal;
       ref_idx_one = params.ior;
       ref_idx_two = 1.0;
+      const Color albedo = get_albedo(hit_info);
+      attenuation = (albedo.value * glm::vec4(std::exp(-hit_info.t * (1.0 - albedo.value.a))));
     }
     float fresnel = fresnel_schlick(glm::dot(-incident_dir, normal), ref_idx_one, ref_idx_two);
     // disable backface culling inside of the transmissive object
     BSDFSample refraction_sample(Ray(hit_info.pos - RAY_START_OFFSET * normal, glm::normalize(glm::refract(incident_dir, normal, ref_idx_one / ref_idx_two)), RayConfig{.backface_culling = false}));
-    refraction_sample.attenuation = glm::vec3(1.0 - fresnel);
+    refraction_sample.attenuation = glm::vec3(1.0 - fresnel) * attenuation;
     BSDFSample reflection_sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal)), RayConfig{.backface_culling = false}));
-    reflection_sample.attenuation = glm::vec3(fresnel);
+    reflection_sample.attenuation = glm::vec3(fresnel) * attenuation;
     // refract returns a zero vector for total internal reflection
     if (glm::dot(refraction_sample.ray.get_dir(), refraction_sample.ray.get_dir()) > 0.1) samples.push_back(refraction_sample);
     else reflection_sample.attenuation = glm::vec3(1.0);
