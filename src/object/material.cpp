@@ -7,12 +7,12 @@
 Material::Material(std::shared_ptr<const std::vector<Texture>> textures, const MaterialParameters& params) : textures(textures), params(params)
 {}
 
-glm::vec3 Material::get_albedo(const HitInfo& hit_info) const
+Color Material::get_albedo(const HitInfo& hit_info) const
 {
-  if (params.show_bary) return glm::vec3(hit_info.bary.s, hit_info.bary.t, 1.0);
-  else if (params.show_normal && !params.smooth_shading) return glm::vec3((hit_info.geometric_normal + 1.0f) / 2.0f);
-  else if (params.show_normal) return glm::vec3((hit_info.normal + 1.0f) / 2.0f);
-  else if (params.show_tex_coords) return glm::vec3(hit_info.tex_coords.s, hit_info.tex_coords.t, 1.0);
+  if (params.show_bary) return Color(hit_info.bary.s, hit_info.bary.t, 1.0f);
+  else if (params.show_normal && !params.smooth_shading) return Color((hit_info.geometric_normal + 1.0f) / 2.0f);
+  else if (params.show_normal) return Color((hit_info.normal + 1.0f) / 2.0f);
+  else if (params.show_tex_coords) return Color(hit_info.tex_coords.s, hit_info.tex_coords.t, 1.0f);
   else if (params.albedo_texture_id == -1) return params.albedo;
   else return (*textures)[params.albedo_texture_id].get_value(hit_info.bary, hit_info.tex_coords);
 }
@@ -22,7 +22,7 @@ glm::vec3 Material::eval(const HitInfo& hit_info, const glm::vec3& incident_dir,
   // for dirac delta lobes every direction has a value of 0.0
   if (is_delta()) return glm::vec3(0.0, 0.0, 0.0);
   const float cos_theta = glm::dot(outgoing_dir, params.smooth_shading ? hit_info.normal : hit_info.geometric_normal);
-  return get_albedo(hit_info) * std::max(0.0f, cos_theta);
+  return get_albedo(hit_info).value * std::max(0.0f, cos_theta);
 }
 
 float fresnel_schlick(float cos_theta, float n_1, float n_2)
@@ -37,7 +37,7 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
   if (is_delta() && params.metallic == 1.0f)
   {
     BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal))));
-    sample.attenuation = get_albedo(hit_info);
+    sample.attenuation = get_albedo(hit_info).value;
     samples.push_back(sample);
   }
   else if (is_delta() && params.transmission == 1.0f)

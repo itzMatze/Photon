@@ -16,7 +16,7 @@ enum class MaterialType
 
 struct MaterialParameters
 {
-  glm::vec3 albedo = glm::vec3(0.0f);
+  Color albedo = Color();
   int32_t albedo_texture_id = -1;
   glm::vec3 emission = glm::vec3(0.0f);
   float emission_strength = 1.0f;
@@ -46,7 +46,7 @@ class Material
 public:
   Material() = default;
   Material(std::shared_ptr<const std::vector<Texture>> textures, const MaterialParameters& params);
-  glm::vec3 get_albedo(const HitInfo& hit_info) const;
+  Color get_albedo(const HitInfo& hit_info) const;
   glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const;
   void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const;
   // is material dirac delta reflective or refractive
