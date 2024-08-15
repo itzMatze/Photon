@@ -47,6 +47,7 @@ public:
   Material() = default;
   Material(std::shared_ptr<const std::vector<Texture>> textures, const MaterialParameters& params);
   Color get_albedo(const HitInfo& hit_info) const;
+  glm::vec3 get_emission(const HitInfo& hit_info) const;
   glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const;
   void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const;
   // is material dirac delta reflective or refractive

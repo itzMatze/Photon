@@ -17,6 +17,11 @@ Color Material::get_albedo(const HitInfo& hit_info) const
   else return (*textures)[params.albedo_texture_id].get_value(hit_info.bary, hit_info.tex_coords);
 }
 
+glm::vec3 Material::get_emission(const HitInfo& hit_info) const
+{
+  return params.emission * params.emission_strength;
+}
+
 glm::vec3 Material::eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const
 {
   // for dirac delta lobes every direction has a value of 0.0

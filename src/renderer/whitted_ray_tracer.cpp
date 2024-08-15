@@ -49,6 +49,7 @@ Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinate
         }
         else
         {
+          color += path_vertex.attenuation * material.get_emission(hit_info);
           for (const auto& light : scene_file.scene->get_lights())
           {
             const glm::vec3 outgoing_dir = glm::normalize(light.get_position() - hit_info.pos);
