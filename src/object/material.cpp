@@ -26,7 +26,8 @@ glm::vec3 Material::eval(const HitInfo& hit_info, const glm::vec3& incident_dir,
 {
   // for dirac delta lobes every direction has a value of 0.0
   if (is_delta()) return glm::vec3(0.0, 0.0, 0.0);
-  const float cos_theta = glm::dot(outgoing_dir, params.smooth_shading ? hit_info.normal : hit_info.geometric_normal);
+  const glm::vec3 normal = params.smooth_shading ? hit_info.get_oriented_face_normal() : hit_info.get_oriented_face_geometric_normal();
+  const float cos_theta = glm::dot(outgoing_dir, normal);
   return get_albedo(hit_info).value * std::max(0.0f, cos_theta);
 }
 
@@ -41,7 +42,7 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
   glm::vec3 normal = params.smooth_shading ? hit_info.normal : hit_info.geometric_normal;
   if (is_delta() && params.metallic == 1.0f)
   {
-    BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal))));
+    BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal)), {.backface_culling = false}));
     sample.attenuation = get_albedo(hit_info).value;
     samples.push_back(sample);
   }

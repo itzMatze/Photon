@@ -15,4 +15,15 @@ struct HitInfo
   float t = std::numeric_limits<float>::max();
   int32_t object_id = -1;
   int32_t material_id = -1;
+  bool is_backside = false;
+
+  glm::vec3 get_oriented_face_normal() const
+  {
+    return (is_backside ? -normal : normal);
+  }
+
+  glm::vec3 get_oriented_face_geometric_normal() const
+  {
+    return (is_backside ? -geometric_normal : geometric_normal);
+  }
 };

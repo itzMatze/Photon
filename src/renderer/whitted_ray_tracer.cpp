@@ -53,14 +53,16 @@ Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinate
           for (const auto& light : scene_file.scene->get_lights())
           {
             const glm::vec3 outgoing_dir = glm::normalize(light.get_position() - hit_info.pos);
+            const glm::vec3 attenuation = material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir);
+            if (glm::dot(attenuation, attenuation) < 0.0000001f) continue;
             const float light_distance = glm::length(light.get_position() - hit_info.pos);
             // trace shadow ray with small offset in the direction of the normal to avoid shadow acne
-            const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.geometric_normal, outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
+            const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.get_oriented_face_geometric_normal(), outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
             HitInfo shadow_hit_info;
             if (scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info)) continue;
             const float light_surface = 4.0 * M_PI * light_distance * light_distance;
             glm::vec3 contribution = glm::vec3(light.get_intensity() / light_surface);
-            contribution *= path_vertex.attenuation * material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir);
+            contribution *= path_vertex.attenuation * attenuation;
             color += contribution;
           }
         }
