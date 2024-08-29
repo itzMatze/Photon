@@ -7,10 +7,8 @@
 #include "renderer/rendering_algorithms.hpp"
 #include "util/timer.hpp"
 #include "image/image_file_handler.hpp"
-#include "renderer/color.hpp"
 #include "renderer/thread_signals.hpp"
 #include "scene/scene_file_handler.hpp"
-#include "util/random_generator.hpp"
 #include "util/vec2.hpp"
 #include "util/log.hpp"
 #include "util/timer.hpp"
@@ -22,28 +20,6 @@ void Renderer::init(SceneFile& scene_file, const std::string& name, const Settin
   phlog::debug("Renderer using {} threads", settings.thread_count);
   output = std::make_shared<Output>(scene_file.settings.resolution, OutputTargetFlags::ColorArray | OutputTargetFlags::SDLSurface);
   if (settings.show_preview_window) preview_window = std::make_unique<Window>(1800, scene_file.settings.resolution);
-  buckets.clear();
-
-  // divide image into buckets that can be rendered concurrently
-  const glm::uvec2 bucket_size = glm::uvec2(scene_file.settings.bucket_size, scene_file.settings.bucket_size);
-  const glm::uvec2 bucket_count = (scene_file.settings.resolution / bucket_size);
-  // add one overflow bucket if the buckets do not fit the resolution
-  const glm::uvec2 overflow_bucket_size = glm::uvec2(scene_file.settings.resolution.x % bucket_size.x, scene_file.settings.resolution.y % bucket_size.y);
-  for (uint32_t x = 0; x < bucket_count.x; x++)
-  {
-    for (uint32_t y = 0; y < bucket_count.y; y++)
-    {
-      buckets.emplace_back(bucket_size * glm::uvec2(x, y), bucket_size * glm::uvec2(x + 1, y + 1));
-    }
-    if (overflow_bucket_size.y > 0) buckets.emplace_back(bucket_size * glm::uvec2(x, bucket_count.y), bucket_size * glm::uvec2(x + 1, bucket_count.y) + glm::uvec2(0, overflow_bucket_size.y));
-  }
-  if (overflow_bucket_size.x > 0)
-  {
-    for (uint32_t y = 0; y < bucket_count.y; y++)
-    {
-      buckets.emplace_back(bucket_size * glm::uvec2(bucket_count.x, y), bucket_size * glm::uvec2(bucket_count.x, y + 1) + glm::uvec2(overflow_bucket_size.x, 0));
-    }
-  }
   phlog::info("Successfully initialized renderer in {}ms", t.elapsed<std::milli>());
 }
 
@@ -83,101 +59,61 @@ void Renderer::render(SceneFile& scene_file, const std::string& name, const Sett
   }
 }
 
-glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool use_jittering)
-{
-  // offset to either get a random position inside of the pixel square or the center of the pixel
-  glm::vec2 offset = use_jittering ? glm::vec2(rng::random_float(), rng::random_float()) : glm::vec2(0.5);
-  glm::vec2 pixel_coordinates = (glm::vec2(pixel) + offset) / glm::vec2(resolution);
-  float aspect_ratio = float(resolution.y) / float(resolution.x);
-  pixel_coordinates.y *= aspect_ratio;
-  pixel_coordinates.y += (1.0 - aspect_ratio) / 2.0;
-  return pixel_coordinates;
-}
-
-void render_buckets(const SceneFile* scene_file,
-                    const Renderer::Settings* renderer_settings,
-                    std::shared_ptr<Output> output,
-                    std::atomic<uint32_t>* bucket_idx,
-                    const std::vector<ImageBucket>* buckets,
-                    Signals* signals_receiver,
-                    Signals* signals_sender,
-                    uint32_t thread_idx)
-{
-  // atomically get next bucket index in each iteration and check whether the index is still valid
-  for (uint32_t local_bucket_idx = bucket_idx->fetch_add(1); local_bucket_idx < buckets->size(); local_bucket_idx = bucket_idx->fetch_add(1))
-  {
-    const ImageBucket& bucket = (*buckets)[local_bucket_idx];
-    for (uint32_t y = bucket.min.y; y < bucket.max.y; y++)
-    {
-      for (uint32_t x = bucket.min.x; x < bucket.max.x; x++)
-      {
-        if ((*signals_receiver) & SignalFlags::Stop) return;
-        Color color = whitted_ray_trace(*scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, renderer_settings->use_jittering));
-        // wait if preview is currently updated
-        while ((*signals_receiver) & SignalFlags::PreventOutputAccess);
-        (*signals_sender) |= SignalFlags::PreventOutputAccess;
-        output->set_pixel(x, y, color);
-        (*signals_sender) &= ~SignalFlags::PreventOutputAccess;
-      }
-    }
-  }
-  (*signals_sender) |= SignalFlags::Done;
-}
-
 bool Renderer::render_frame(SceneFile& scene_file, const Settings& settings)
 {
-  std::atomic<uint32_t> bucket_idx = 0;
   // prevent false sharing by padding signals to 64 bytes
   struct PaddedSignals {
     Signals signals;
     uint8_t pad[64 - sizeof(Signals)];
   };
   // create enum bitfields to send signals from master thread to slaves and communicate back
-  std::vector<PaddedSignals> thread_signals(settings.thread_count + 1);
-  std::vector<std::jthread> threads;
-  for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_idx, &buckets, &(thread_signals.back().signals), &(thread_signals[i].signals), i));
-  // if the preview window should not be shown we can return immediately
-  if (!preview_window)
-  {
-    threads.clear();
-    return true;
-  }
-  // otherwise update the window at fixed time steps and after rendering is finished
-  Timer t;
+  std::vector<PaddedSignals> thread_signals_storage(settings.thread_count);
+  std::vector<Signals*> thread_signals(settings.thread_count);
+  for (uint32_t i = 0; i < thread_signals_storage.size(); i++) thread_signals[i] = &(thread_signals_storage[i].signals);
+  Signals master_signals;
+  WhittedSettings whitted_settings{.thread_count = settings.thread_count};
+  std::jthread rendering_main_thread = std::jthread(&whitted_ray_trace, scene_file, whitted_settings, output, &master_signals, &thread_signals);
+  // exit only after rendering is finished
   auto check_threads_done = [&]() -> bool {
     bool done = true;
     for (uint32_t i = 0; i < settings.thread_count; i++)
     {
-      const Signals& signal = thread_signals[i].signals;
+      const Signals& signal = *(thread_signals[i]);
       done &= (signal & SignalFlags::Done);
     }
     return done;
   };
+  // if the preview window should not be shown there is nothing to do
+  if (!preview_window)
+  {
+    while (!check_threads_done()) std::this_thread::yield();
+    return true;
+  }
+  // otherwise update the window at fixed time steps
+  Timer t;
   while (!check_threads_done())
   {
     // window received exit command, stop rendering and return early
     if (!preview_window->get_inputs())
     {
       phlog::info("Received exit signal, aborting rendering");
-      thread_signals.back().signals |= SignalFlags::Stop;
-      threads.clear();
+      master_signals |= SignalFlags::Stop;
       return false;
     }
     if (t.elapsed() > 0.5)
     {
       t.restart();
-      thread_signals.back().signals |= SignalFlags::PreventOutputAccess;
+      master_signals |= SignalFlags::PreventOutputAccess;
       for (uint32_t i = 0; i < settings.thread_count; i++)
       {
         // wait for all threads to finish writing their pixel
-        while (thread_signals[i].signals & SignalFlags::PreventOutputAccess);
+        while (*(thread_signals[i]) & SignalFlags::PreventOutputAccess);
       }
       preview_window->update_content(output->get_sdl_surface());
-      thread_signals.back().signals &= ~SignalFlags::PreventOutputAccess;
+      master_signals &= ~SignalFlags::PreventOutputAccess;
     }
     std::this_thread::yield();
   }
   preview_window->update_content(output->get_sdl_surface());
-  threads.clear();
   return true;
 }

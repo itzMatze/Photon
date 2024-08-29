@@ -41,3 +41,14 @@ Ray Camera::get_ray(const glm::vec2 pixel) const
   const glm::vec3 pixel_pos = upper_left_corner + (pixel.x * sensor_size * spatial_conf.get_x_axis()) - (pixel.y * sensor_size * spatial_conf.get_y_axis());
   return Ray(pixel_pos, glm::normalize(pixel_pos - spatial_conf.get_position()));
 }
+
+glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool use_jittering)
+{
+  // offset to either get a random position inside of the pixel square or the center of the pixel
+  glm::vec2 offset = use_jittering ? glm::vec2(rng::random_float(), rng::random_float()) : glm::vec2(0.5);
+  glm::vec2 pixel_coordinates = (glm::vec2(pixel) + offset) / glm::vec2(resolution);
+  float aspect_ratio = float(resolution.y) / float(resolution.x);
+  pixel_coordinates.y *= aspect_ratio;
+  pixel_coordinates.y += (1.0 - aspect_ratio) / 2.0;
+  return pixel_coordinates;
+}

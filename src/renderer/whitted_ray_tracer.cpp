@@ -1,6 +1,10 @@
+#include "renderer/bucket_rendering.hpp"
+#include "renderer/camera.hpp"
+#include "renderer/output.hpp"
 #include "renderer/rendering_algorithms.hpp"
+#include <thread>
 
-Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinates)
+Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
 {
   // store all rays that need to be traced, their accumulated attenuation, and their depth
   struct PathVertex
@@ -75,4 +79,40 @@ Color whitted_ray_trace(const SceneFile &scene_file, glm::vec2 camera_coordinate
     }
   }
   return color;
+}
+
+void render_buckets(const SceneFile* scene_file,
+                    const WhittedSettings* renderer_settings,
+                    std::shared_ptr<Output> output,
+                    BucketRendering* bucket_rendering,
+                    Signals* signals_receiver,
+                    Signals* signals_sender,
+                    uint32_t thread_idx)
+{
+  ImageBucket bucket;
+  // atomically get next bucket index in each iteration and check whether the index is still valid
+  while (bucket_rendering->get_next_bucket(bucket))
+  {
+    for (uint32_t y = bucket.min.y; y < bucket.max.y; y++)
+    {
+      for (uint32_t x = bucket.min.x; x < bucket.max.x; x++)
+      {
+        if ((*signals_receiver) & SignalFlags::Stop) return;
+        Color color = trace(*scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, false));
+        // wait if preview is currently updated
+        while ((*signals_receiver) & SignalFlags::PreventOutputAccess);
+        (*signals_sender) |= SignalFlags::PreventOutputAccess;
+        output->set_pixel(x, y, color);
+        (*signals_sender) &= ~SignalFlags::PreventOutputAccess;
+      }
+    }
+  }
+  (*signals_sender) |= SignalFlags::Done;
+}
+
+void whitted_ray_trace(const SceneFile& scene_file, const WhittedSettings& settings, std::shared_ptr<Output> output, Signals* master_signals, std::vector<Signals*>* thread_signals)
+{
+  BucketRendering bucket_rendering(scene_file);
+  std::vector<std::jthread> threads;
+  for (uint32_t i = 0; i < settings.thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_rendering, master_signals, (*thread_signals)[i], i));
 }

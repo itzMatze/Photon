@@ -1,5 +1,6 @@
 #pragma once
 #include "renderer/ray.hpp"
+#include "util/random_generator.hpp"
 #include "util/spatial_configuration.hpp"
 #include "util/vec2.hpp"
 #include "util/vec3.hpp"
@@ -47,3 +48,4 @@ private:
   float sensor_size;
 };
 
+glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool use_jittering);

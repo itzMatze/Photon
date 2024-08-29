@@ -17,6 +17,7 @@ set(SOURCE_FILES
   src/object/object_instance.cpp
   src/object/texture.cpp
   src/object/triangle.cpp
+  src/renderer/bucket_rendering.cpp
   src/renderer/camera.cpp
   src/renderer/color.cpp
   src/renderer/output.cpp

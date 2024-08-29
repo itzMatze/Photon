@@ -5,12 +5,6 @@
 #include "scene/scene_file_handler.hpp"
 #include "util/vec2.hpp"
 
-struct ImageBucket
-{
-  glm::uvec2 min;
-  glm::uvec2 max;
-};
-
 class Renderer
 {
 public:
@@ -24,8 +18,6 @@ public:
   void render(SceneFile& scene_file, const std::string& name, const Settings& settings);
 
 private:
-
-  std::vector<ImageBucket> buckets;
   std::shared_ptr<Output> output;
   std::unique_ptr<Window> preview_window;
 
