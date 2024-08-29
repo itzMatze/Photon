@@ -20,6 +20,7 @@ enum class SignalFlags : uint32_t
   None = 0,
   Stop = (1 << 0),
   PreventOutputAccess = (1 << 1),
+  Done = (1 << 2),
 };
 
 using Signals = NamedBitfield<SignalFlags>;
@@ -133,6 +134,7 @@ void render_buckets(const SceneFile* scene_file,
       }
     }
   }
+  (*signals_sender) |= SignalFlags::Done;
 }
 
 bool Renderer::render_frame()
@@ -155,8 +157,16 @@ bool Renderer::render_frame()
   }
   // otherwise update the window at fixed time steps and after rendering is finished
   Timer t;
-  // each thread will increase the index once when querying it after the last bucket has been taken
-  while (bucket_idx.load() < buckets.size() + settings.thread_count)
+  auto check_threads_done = [&]() -> bool {
+    bool done = true;
+    for (uint32_t i = 0; i < settings.thread_count; i++)
+    {
+      const Signals& signal = thread_signals[i].signals;
+      done &= (signal & SignalFlags::Done);
+    }
+    return done;
+  };
+  while (!check_threads_done())
   {
     // window received exit command, stop rendering and return early
     if (!preview_window->get_inputs())
