@@ -30,8 +30,7 @@ int main(int argc, char** argv)
   Timer t;
   std::string scene_filename("scene0.phene");
   if (load_scene_file(scene_filename, scene_file) != 0) return 1;
-  renderer.init(scene_file, "image", {.thread_count = thread_count, .show_preview_window = true});
-  renderer.render();
+  renderer.render(scene_file, "image", {.thread_count = thread_count, .show_preview_window = true});
   return 0;
 }
 

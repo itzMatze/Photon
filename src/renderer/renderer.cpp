@@ -31,9 +31,6 @@ void Renderer::init(SceneFile& scene_file, const std::string& name, const Settin
   Timer t;
   phlog::debug("Renderer initializing");
   phlog::debug("Renderer using {} threads", settings.thread_count);
-  this->settings = settings;
-  this->scene_file = scene_file;
-  output_name = name;
   output = std::make_shared<Output>(scene_file.settings.resolution, OutputTargetFlags::ColorArray | OutputTargetFlags::SDLSurface);
   if (settings.show_preview_window) preview_window = std::make_unique<Window>(1800, scene_file.settings.resolution);
   buckets.clear();
@@ -61,8 +58,9 @@ void Renderer::init(SceneFile& scene_file, const std::string& name, const Settin
   phlog::info("Successfully initialized renderer in {}ms", t.elapsed<std::milli>());
 }
 
-void Renderer::render()
+void Renderer::render(SceneFile& scene_file, const std::string& name, const Settings& settings)
 {
+  init(scene_file, name, settings);
   Timer t;
   phlog::debug("Starting rendering");
   assert(scene_file.scene);
@@ -70,22 +68,22 @@ void Renderer::render()
   if (!scene_file.scene->is_animated())
   {
     phlog::debug("Scene is not animated");
-    if (!render_frame()) return;
+    if (!render_frame(scene_file, settings)) return;
     phlog::info("Successfully finished rendering in {}ms", t.restart<std::milli>());
     phlog::debug("Saving image");
-    save_single_image(Bitmap(output->get_pixels(), scene_file.settings.resolution), output_name, FileType::png);
+    save_single_image(Bitmap(output->get_pixels(), scene_file.settings.resolution), name, FileType::png);
     phlog::debug("Successfully saved image in {}ms", t.restart<std::milli>());
   }
   else
   {
     phlog::debug("Scene is animated");
-    ImageSeries image_series(output_name, FileType::png);
+    ImageSeries image_series(name, FileType::png);
     uint32_t frame_idx = 0;
     while (scene_file.scene->step())
     {
       Timer t;
       phlog::debug("Rendering frame {}", frame_idx);
-      if (!render_frame()) return;
+      if (!render_frame(scene_file, settings)) return;
       phlog::debug("Successfully rendered frame {} in {}ms", frame_idx, t.restart<std::milli>());
       phlog::debug("Saving frame {} to image", frame_idx);
       image_series.save_image(Bitmap(output->get_pixels(), scene_file.settings.resolution), frame_idx);
@@ -137,7 +135,7 @@ void render_buckets(const SceneFile* scene_file,
   (*signals_sender) |= SignalFlags::Done;
 }
 
-bool Renderer::render_frame()
+bool Renderer::render_frame(SceneFile& scene_file, const Settings& settings)
 {
   std::atomic<uint32_t> bucket_idx = 0;
   // prevent false sharing by padding signals to 64 bytes

@@ -21,18 +21,15 @@ public:
     bool show_preview_window = true;
   };
   Renderer() = default;
-  void init(SceneFile& scene_file, const std::string& name, const Settings& settings);
-  void render();
+  void render(SceneFile& scene_file, const std::string& name, const Settings& settings);
 
 private:
 
-  SceneFile scene_file;
-  std::string output_name;
   std::vector<ImageBucket> buckets;
-  Settings settings;
   std::shared_ptr<Output> output;
   std::unique_ptr<Window> preview_window;
 
-  bool render_frame();
+  void init(SceneFile& scene_file, const std::string& name, const Settings& settings);
+  bool render_frame(SceneFile& scene_file, const Settings& settings);
 };
 
