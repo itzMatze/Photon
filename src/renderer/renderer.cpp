@@ -1,6 +1,5 @@
 #include "renderer/renderer.hpp"
 
-#include <iostream>
 #include <memory>
 #include <thread>
 
@@ -9,22 +8,12 @@
 #include "util/timer.hpp"
 #include "image/image_file_handler.hpp"
 #include "renderer/color.hpp"
+#include "renderer/thread_signals.hpp"
 #include "scene/scene_file_handler.hpp"
 #include "util/random_generator.hpp"
 #include "util/vec2.hpp"
 #include "util/log.hpp"
 #include "util/timer.hpp"
-
-enum class SignalFlags : uint32_t
-{
-  None = 0,
-  Stop = (1 << 0),
-  PreventOutputAccess = (1 << 1),
-  Done = (1 << 2),
-};
-
-using Signals = NamedBitfield<SignalFlags>;
-ENABLE_ENUM_OPERATORS(SignalFlags);
 
 void Renderer::init(SceneFile& scene_file, const std::string& name, const Settings& settings)
 {
