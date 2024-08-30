@@ -9,17 +9,18 @@ Material::Material(std::shared_ptr<const std::vector<Texture>> textures, const M
 
 Color Material::get_albedo(const HitInfo& hit_info) const
 {
-  if (params.show_bary) return Color(hit_info.bary.s, hit_info.bary.t, 1.0f);
-  else if (params.show_normal && !params.smooth_shading) return Color((hit_info.geometric_normal + 1.0f) / 2.0f);
-  else if (params.show_normal) return Color((hit_info.normal + 1.0f) / 2.0f);
-  else if (params.show_tex_coords) return Color(hit_info.tex_coords.s, hit_info.tex_coords.t, 1.0f);
-  else if (params.albedo_texture_id == -1) return params.albedo;
+  if (params.albedo_texture_id == -1) return params.albedo;
   else return (*textures)[params.albedo_texture_id].get_value(hit_info.bary, hit_info.tex_coords);
 }
 
 glm::vec3 Material::get_emission(const HitInfo& hit_info) const
 {
-  return params.emission * params.emission_strength;
+  if (params.show_bary) return glm::vec3(hit_info.bary.s, hit_info.bary.t, 1.0f);
+  else if (params.show_normal && !params.smooth_shading) return glm::vec3((hit_info.geometric_normal + 1.0f) / 2.0f);
+  else if (params.show_normal) return glm::vec3((hit_info.normal + 1.0f) / 2.0f);
+  else if (params.show_tex_coords) return glm::vec3(hit_info.tex_coords.s, hit_info.tex_coords.t, 1.0f);
+  else if (params.show_albedo) return get_albedo(hit_info).value;
+  else return params.emission * params.emission_strength;
 }
 
 glm::vec3 Material::eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const

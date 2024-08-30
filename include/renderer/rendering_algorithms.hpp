@@ -3,7 +3,6 @@
 #include "renderer/output.hpp"
 #include "renderer/thread_signals.hpp"
 #include "scene/scene_file_handler.hpp"
-#include "util/vec2.hpp"
 
 struct WhittedSettings
 {

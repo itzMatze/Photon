@@ -16,6 +16,7 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
   std::vector<PathVertex> path_vertices;
   std::vector<BSDFSample> bsdf_samples;
   HitInfo hit_info;
+  Material default_material;
   // add initial vertex of the camera
   path_vertices.push_back(PathVertex{scene_file.scene->get_camera().get_ray(camera_coordinates), glm::vec3(1.0, 1.0, 1.0), 0});
   Color color(0.0, 0.0, 0.0);
@@ -26,9 +27,8 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
     path_vertices.pop_back();
     if (scene_file.scene->get_geometry().intersect(path_vertex.ray, hit_info))
     {
-      Material material;
-      if (hit_info.material_id == -1) material = Material();
-      else material = scene_file.scene->get_geometry().get_material(hit_info.material_id);
+      const Material& material = (hit_info.material_id == -1) ? default_material : scene_file.scene->get_geometry().get_material(hit_info.material_id);
+      color += path_vertex.attenuation * material.get_emission(hit_info);
       // whitted ray tracing can only handle perfectly transmissive, perfectly reflective, and diffuse materials
       if (material.is_delta())
       {
@@ -46,14 +46,8 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
       }
       else
       {
-        // if material does not depend on light (usually debug vis) just fetch albedo
-        if (!material.is_light_dependent())
+        if (material.is_light_dependent())
         {
-          color.value += material.get_albedo(hit_info).value;
-        }
-        else
-        {
-          color += path_vertex.attenuation * material.get_emission(hit_info);
           for (const auto& light : scene_file.scene->get_lights())
           {
             const glm::vec3 outgoing_dir = glm::normalize(light.get_position() - hit_info.pos);
