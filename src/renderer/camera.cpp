@@ -1,4 +1,6 @@
 #include "renderer/camera.hpp"
+#include "util/log.hpp"
+#include "util/random_generator.hpp"
 #include "util/spatial_configuration.hpp"
 #include "util/vec3.hpp"
 
@@ -42,10 +44,11 @@ Ray Camera::get_ray(const glm::vec2 pixel) const
   return Ray(pixel_pos, glm::normalize(pixel_pos - spatial_conf.get_position()));
 }
 
-glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool use_jittering)
+glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool use_jittering, RandomGenerator* rnd)
 {
+  PH_ASSERT(!use_jittering || (use_jittering && rnd), "Pass a random generator if jittering is enabled!");
   // offset to either get a random position inside of the pixel square or the center of the pixel
-  glm::vec2 offset = use_jittering ? glm::vec2(rng::random_float(), rng::random_float()) : glm::vec2(0.5);
+  glm::vec2 offset = use_jittering ? glm::vec2(rnd->random_float(), rnd->random_float()) : glm::vec2(0.5);
   glm::vec2 pixel_coordinates = (glm::vec2(pixel) + offset) / glm::vec2(resolution);
   float aspect_ratio = float(resolution.y) / float(resolution.x);
   pixel_coordinates.y *= aspect_ratio;

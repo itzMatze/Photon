@@ -48,4 +48,5 @@ private:
   float sensor_size;
 };
 
-glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool use_jittering);
+// requires a random generator if jittering is enabled
+glm::vec2 get_camera_coordinates(glm::uvec2 resolution, glm::uvec2 pixel, bool use_jittering = false, RandomGenerator* rnd = nullptr);
