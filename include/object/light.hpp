@@ -6,7 +6,7 @@ class Light
 {
 public:
   Light(float intensity, const glm::vec3& position);
-  glm::vec3 get_contribution(const glm::vec3& pos, const glm::vec3& normal);
+  glm::vec3 get_contribution(const glm::vec3& pos) const;
   float get_intensity() const;
   glm::vec3 get_position() const;
   void set_position(const glm::vec3& position);

@@ -58,8 +58,7 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
             const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.get_oriented_face_geometric_normal(), outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
             HitInfo shadow_hit_info;
             if (scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info)) continue;
-            const float light_surface = 4.0 * M_PI * light_distance * light_distance;
-            glm::vec3 contribution = glm::vec3(light.get_intensity() / light_surface);
+            glm::vec3 contribution = light.get_contribution(hit_info.pos);
             contribution *= path_vertex.attenuation * attenuation;
             color += contribution;
           }

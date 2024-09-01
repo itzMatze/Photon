@@ -4,11 +4,10 @@
 Light::Light(float intensity, const glm::vec3& position) : intensity(intensity), position(position)
 {}
 
-glm::vec3 Light::get_contribution(const glm::vec3& pos, const glm::vec3& normal)
+glm::vec3 Light::get_contribution(const glm::vec3& pos) const
 {
-  glm::vec3 contribution(0.0);
-  const float distance = glm::length(position - pos);
-  contribution = glm::vec3((intensity * std::max(0.0f, glm::dot(position - pos, normal))) / (distance * distance));
+  const float distance = glm::distance(position, pos);
+  const glm::vec3 contribution = glm::vec3(intensity) / (distance * distance);
   return contribution;
 }
 
