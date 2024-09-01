@@ -4,9 +4,32 @@
 #include "renderer/thread_signals.hpp"
 #include "scene/scene_file_handler.hpp"
 
-struct WhittedSettings
+enum class RenderingAlgorithms
 {
-  uint32_t thread_count;
+  WhittedRayTracing,
+  PathTracing
 };
 
-void whitted_ray_trace(const SceneFile& scene_file, const WhittedSettings& settings, std::shared_ptr<Output> output, Signals* master_signals, std::vector<Signals*>* thread_signals);
+struct WhittedSettings
+{
+};
+
+void whitted_ray_trace(const SceneFile& scene_file,
+                       const WhittedSettings& whitted_settings,
+                       std::shared_ptr<Output> output,
+                       Signals* master_signals,
+                       std::vector<Signals*>* thread_signals,
+                       uint32_t thread_count);
+
+struct PathTracingSettings
+{
+  uint32_t sample_count;
+  bool use_jittering;
+};
+
+void path_trace(const SceneFile& scene_file,
+                const PathTracingSettings& settings,
+                std::shared_ptr<Output> output,
+                Signals* master_signals,
+                std::vector<Signals*>* thread_signals,
+                uint32_t thread_count);

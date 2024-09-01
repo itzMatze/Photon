@@ -26,6 +26,7 @@ BucketRendering::BucketRendering(const SceneFile& scene_file) : bucket_idx(0)
 
 bool BucketRendering::get_next_bucket(ImageBucket& bucket)
 {
+  // atomically get next bucket index in each iteration and check whether the index is still valid
   uint32_t next_idx = bucket_idx.fetch_add(1);
   if (next_idx >= buckets.size()) return false;
   bucket = buckets[next_idx];

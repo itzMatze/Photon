@@ -5,6 +5,7 @@
 #include "object/texture.hpp"
 #include "renderer/hit_info.hpp"
 #include "renderer/ray.hpp"
+#include "util/random_generator.hpp"
 #include "util/vec3.hpp"
 
 enum class MaterialType
@@ -33,12 +34,13 @@ struct MaterialParameters
 
 struct BSDFSample
 {
-  BSDFSample(const Ray& ray) : ray(ray), attenuation(1.0, 1.0, 1.0)
+  BSDFSample(const Ray& ray, float pdf) : ray(ray), attenuation(1.0), pdf(pdf)
   {}
-  BSDFSample(const Ray& ray, const glm::vec3& attenuation) : ray(ray), attenuation(attenuation)
+  BSDFSample(const Ray& ray, const glm::vec3& attenuation, float pdf) : ray(ray), attenuation(attenuation), pdf(pdf)
   {}
   Ray ray;
   glm::vec3 attenuation;
+  float pdf;
 };
 
 class Material
@@ -49,7 +51,7 @@ public:
   Color get_albedo(const HitInfo& hit_info) const;
   glm::vec3 get_emission(const HitInfo& hit_info) const;
   glm::vec3 eval(const HitInfo& hit_info, const glm::vec3& incident_dir, const glm::vec3& outgoing_dir) const;
-  void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const;
+  void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples, RandomGenerator* rnd = nullptr) const;
   // is material dirac delta reflective or refractive
   bool is_delta() const;
   bool is_light_dependent() const;

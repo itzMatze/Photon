@@ -2,9 +2,10 @@
 #include "renderer/camera.hpp"
 #include "renderer/output.hpp"
 #include "renderer/rendering_algorithms.hpp"
+#include "util/random_generator.hpp"
 #include <thread>
 
-Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
+Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGenerator& rnd)
 {
   // store all rays that need to be traced, their accumulated attenuation, and their depth
   struct PathVertex
@@ -29,22 +30,18 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
     {
       const Material& material = (hit_info.material_id == -1) ? default_material : scene_file.scene->get_geometry().get_material(hit_info.material_id);
       color += path_vertex.attenuation * material.get_emission(hit_info);
-      // whitted ray tracing can only handle perfectly transmissive, perfectly reflective, and diffuse materials
-      if (material.is_delta())
+      const uint32_t depth = path_vertex.depth + 1;
+      if (depth < scene_file.settings.max_path_length)
       {
-        const uint32_t depth = path_vertex.depth + 1;
-        if (depth < scene_file.settings.max_path_length)
+        bsdf_samples.clear();
+        material.get_bsdf_samples(hit_info, path_vertex.ray.get_dir(), bsdf_samples, &rnd);
+        for (const auto& bsdf_sample : bsdf_samples)
         {
-          bsdf_samples.clear();
-          material.get_bsdf_samples(hit_info, path_vertex.ray.get_dir(), bsdf_samples);
-          for (const auto& bsdf_sample : bsdf_samples)
-          {
-            const PathVertex next_path_vertex = PathVertex{bsdf_sample.ray, path_vertex.attenuation * bsdf_sample.attenuation, depth};
-            path_vertices.push_back(next_path_vertex);
-          }
+          const PathVertex next_path_vertex{bsdf_sample.ray, path_vertex.attenuation * bsdf_sample.attenuation, depth};
+          path_vertices.push_back(next_path_vertex);
         }
       }
-      else
+      if (!material.is_delta())
       {
         if (material.is_light_dependent())
         {
@@ -71,16 +68,19 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
       color += scene_file.scene->get_background_color() * path_vertex.attenuation;
     }
   }
+  color.value.a = 1.0f;
   return color;
 }
 
 void render_buckets(const SceneFile* scene_file,
+                    const PathTracingSettings* settings,
                     std::shared_ptr<Output> output,
                     BucketRendering* bucket_rendering,
                     Signals* signals_receiver,
                     Signals* signals_sender,
                     uint32_t thread_idx)
 {
+  RandomGenerator rnd(thread_idx);
   ImageBucket bucket;
   while (bucket_rendering->get_next_bucket(bucket))
   {
@@ -88,27 +88,31 @@ void render_buckets(const SceneFile* scene_file,
     {
       for (uint32_t x = bucket.min.x; x < bucket.max.x; x++)
       {
-        if ((*signals_receiver) & SignalFlags::Stop) return;
-        Color color = trace(*scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, false));
-        // wait if preview is currently updated
-        while ((*signals_receiver) & SignalFlags::PreventOutputAccess);
-        (*signals_sender) |= SignalFlags::PreventOutputAccess;
-        output->set_pixel(x, y, color);
-        (*signals_sender) &= ~SignalFlags::PreventOutputAccess;
+        Color color;
+        for (uint32_t s = 0; s < settings->sample_count; s++)
+        {
+          if ((*signals_receiver) & SignalFlags::Stop) return;
+          color += trace(*scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, settings->use_jittering, &rnd), rnd);
+          // wait if preview is currently updated
+          while ((*signals_receiver) & SignalFlags::PreventOutputAccess);
+          (*signals_sender) |= SignalFlags::PreventOutputAccess;
+          output->set_pixel(x, y, color / glm::vec3(float(s + 1)));
+          (*signals_sender) &= ~SignalFlags::PreventOutputAccess;
+        }
       }
     }
   }
   (*signals_sender) |= SignalFlags::Done;
 }
 
-void whitted_ray_trace(const SceneFile& scene_file,
-                       const WhittedSettings& whitted_settings,
-                       std::shared_ptr<Output> output,
-                       Signals* master_signals,
-                       std::vector<Signals*>* thread_signals,
-                       uint32_t thread_count)
+void path_trace(const SceneFile& scene_file,
+                const PathTracingSettings& settings,
+                std::shared_ptr<Output> output,
+                Signals* master_signals,
+                std::vector<Signals*>* thread_signals,
+                uint32_t thread_count)
 {
   BucketRendering bucket_rendering(scene_file);
   std::vector<std::jthread> threads;
-  for (uint32_t i = 0; i < thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, output, &bucket_rendering, master_signals, (*thread_signals)[i], i));
+  for (uint32_t i = 0; i < thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_rendering, master_signals, (*thread_signals)[i], i));
 }

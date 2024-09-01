@@ -1,5 +1,6 @@
 #include "object/material.hpp"
 #include "renderer/hit_info.hpp"
+#include "util/random_generator.hpp"
 #include "util/vec3.hpp"
 #include "glm/geometric.hpp"
 #include <memory>
@@ -38,12 +39,28 @@ float fresnel_schlick(float cos_theta, float n_1, float n_2)
     return F0 + (1.0 - F0) * std::pow(1.0 - cos_theta, 5.0);
 }
 
-void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples) const
+struct DirectionSample
+{
+  glm::vec3 dir;
+  float pdf;
+};
+
+DirectionSample random_cosine_weighted_hemisphere(const glm::vec3 normal, RandomGenerator& rnd)
+{
+  float a = 1.0f - 2.0f * rnd.random_float();
+  float b = std::sqrt(1.0f - a * a);
+  float phi = 2.0f * M_PI * rnd.random_float();
+  glm::vec3 dir = glm::vec3(normal.x + b * std::cos(phi), normal.y + b * std::sin(phi), normal.z + a);
+  DirectionSample dir_sample{.dir = glm::normalize(dir), .pdf = a / M_PIf};
+  return dir_sample;
+}
+
+void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples, RandomGenerator* rnd) const
 {
   glm::vec3 normal = params.smooth_shading ? hit_info.normal : hit_info.geometric_normal;
   if (is_delta() && params.metallic == 1.0f)
   {
-    BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal)), {.backface_culling = false}));
+    BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal)), {.backface_culling = false}), 1.0f);
     sample.attenuation = get_albedo(hit_info).value;
     samples.push_back(sample);
   }
@@ -64,14 +81,20 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
     }
     float fresnel = fresnel_schlick(glm::dot(-incident_dir, normal), ref_idx_one, ref_idx_two);
     // disable backface culling inside of the transmissive object
-    BSDFSample refraction_sample(Ray(hit_info.pos - RAY_START_OFFSET * normal, glm::normalize(glm::refract(incident_dir, normal, ref_idx_one / ref_idx_two)), RayConfig{.backface_culling = false}));
+    BSDFSample refraction_sample(Ray(hit_info.pos - RAY_START_OFFSET * normal, glm::normalize(glm::refract(incident_dir, normal, ref_idx_one / ref_idx_two)), RayConfig{.backface_culling = false}), 1.0f);
     refraction_sample.attenuation = glm::vec3(1.0 - fresnel) * attenuation;
-    BSDFSample reflection_sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal)), RayConfig{.backface_culling = false}));
+    BSDFSample reflection_sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, glm::normalize(glm::reflect(incident_dir, normal)), RayConfig{.backface_culling = false}), 1.0f);
     reflection_sample.attenuation = glm::vec3(fresnel) * attenuation;
     // refract returns a zero vector for total internal reflection
     if (glm::dot(refraction_sample.ray.get_dir(), refraction_sample.ray.get_dir()) > 0.1) samples.push_back(refraction_sample);
     else reflection_sample.attenuation = glm::vec3(1.0);
     samples.push_back(reflection_sample);
+  }
+  else if (rnd && !is_delta())
+  {
+    DirectionSample dir_sample = random_cosine_weighted_hemisphere(normal, *rnd);
+    BSDFSample sample(Ray(hit_info.pos + RAY_START_OFFSET * normal, dir_sample.dir, {.backface_culling = false}), get_albedo(hit_info).value, dir_sample.pdf);
+    samples.push_back(sample);
   }
 }
 

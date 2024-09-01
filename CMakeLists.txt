@@ -21,6 +21,7 @@ set(SOURCE_FILES
   src/renderer/camera.cpp
   src/renderer/color.cpp
   src/renderer/output.cpp
+  src/renderer/path_tracer.cpp
   src/renderer/ray.cpp
   src/renderer/renderer.cpp
   src/renderer/whitted_ray_tracer.cpp

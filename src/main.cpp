@@ -5,6 +5,7 @@
 
 #include "renderer/color.hpp"
 #include "renderer/renderer.hpp"
+#include "renderer/rendering_algorithms.hpp"
 #include "scene/scene_factory.hpp"
 #include "scene/scene_file_handler.hpp"
 #include "util/timer.hpp"
@@ -30,7 +31,8 @@ int main(int argc, char** argv)
   Timer t;
   std::string scene_filename("scene0.phene");
   if (load_scene_file(scene_filename, scene_file) != 0) return 1;
-  renderer.render(scene_file, "image", {.thread_count = thread_count, .show_preview_window = true});
+  Renderer::Settings renderer_settings(PathTracingSettings{.sample_count = 128, .use_jittering = true}, thread_count, true);
+  renderer.render(scene_file, "image", renderer_settings);
   return 0;
 }
 

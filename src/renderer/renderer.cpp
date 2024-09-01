@@ -71,8 +71,20 @@ bool Renderer::render_frame(SceneFile& scene_file, const Settings& settings)
   std::vector<Signals*> thread_signals(settings.thread_count);
   for (uint32_t i = 0; i < thread_signals_storage.size(); i++) thread_signals[i] = &(thread_signals_storage[i].signals);
   Signals master_signals;
-  WhittedSettings whitted_settings{.thread_count = settings.thread_count};
-  std::jthread rendering_main_thread = std::jthread(&whitted_ray_trace, scene_file, whitted_settings, output, &master_signals, &thread_signals);
+  std::jthread rendering_main_thread;
+  switch (settings.rendering_algorithm)
+  {
+    case RenderingAlgorithms::WhittedRayTracing:
+    {
+      rendering_main_thread = std::jthread(&whitted_ray_trace, scene_file, settings.whitted_settings, output, &master_signals, &thread_signals, settings.thread_count);
+      break;
+    }
+    case RenderingAlgorithms::PathTracing:
+    {
+      rendering_main_thread = std::jthread(&path_trace, scene_file, settings.path_tracing_settings, output, &master_signals, &thread_signals, settings.thread_count);
+      break;
+    }
+  }
   // exit only after rendering is finished
   auto check_threads_done = [&]() -> bool {
     bool done = true;
