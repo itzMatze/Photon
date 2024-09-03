@@ -57,7 +57,7 @@ void save_single_image(const Bitmap& bitmap, const std::string& name, FileType t
   std::time_t time = std::time(nullptr);
   std::tm local_time = *std::localtime(&time);
   char time_chars[20];
-  std::strftime(time_chars, sizeof(time_chars), "%d-%m-%Y_%H-%M-%S", &local_time);
+  std::strftime(time_chars, sizeof(time_chars), "%Y-%m-%d_%H-%M-%S", &local_time);
   std::string time_string(time_chars);
   image_path.append(time_string);
   write_image(bitmap, image_path, type);
