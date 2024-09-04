@@ -18,7 +18,8 @@ public:
   bool intersect(const Ray& ray, HitInfo& hit_info) const;
   bool intersect(const AABB& aabb, bool accurate = true) const;
 
-  std::shared_ptr<const std::vector<Vertex>> vertices;
+private:
+  const std::shared_ptr<const std::vector<Vertex>> vertices;
   uint32_t vertex_indices[3];
   glm::vec3 geometric_normal;
 };
