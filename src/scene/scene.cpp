@@ -16,7 +16,7 @@ Scene::Scene(const std::vector<std::shared_ptr<Geometry>>& geometry_keyframes,
 {
   assert(geometry_keyframes.size() == camera_keyframes.size() && geometry_keyframes.size() == (frame_counts.size() + 1));
   assert(geometry_keyframes.size() > 0 && camera_keyframes.size() > 0);
-  current_geometry = *geometry_keyframes[0];
+  current_geometry = geometry_keyframes[0];
   current_lights = light_keyframes[0]->get_data();
   current_camera = Camera(*camera_keyframes[0]);
 }
@@ -28,7 +28,7 @@ Color Scene::get_background_color() const
 
 const Geometry& Scene::get_geometry() const
 {
-  return current_geometry;
+  return *current_geometry;
 }
 
 const std::vector<Light>& Scene::get_lights() const
@@ -49,7 +49,7 @@ bool Scene::step()
 
   // interpolation weight between current and next keyframe
   float weight = float(current_frame_step) / float(frame_count);
-  current_geometry = interpolate(*geometry_keyframes[current_keyframe], *geometry_keyframes[current_keyframe + 1], weight);
+  current_geometry = std::make_shared<Geometry>(interpolate(*geometry_keyframes[current_keyframe], *geometry_keyframes[current_keyframe + 1], weight));
   current_lights = interpolate(*light_keyframes[current_keyframe], *light_keyframes[current_keyframe + 1], weight).get_data();
   CameraConfig interpolated_cam = interpolate(*camera_keyframes[current_keyframe], *camera_keyframes[current_keyframe + 1], weight);
   current_camera = Camera(interpolated_cam);

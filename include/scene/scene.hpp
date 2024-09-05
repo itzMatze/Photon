@@ -30,7 +30,7 @@ private:
   std::vector<std::shared_ptr<InterpolatableData<Light>>> light_keyframes;
   std::vector<std::shared_ptr<CameraConfig>> camera_keyframes;
   std::vector<uint32_t> frame_counts;
-  Geometry current_geometry;
+  std::shared_ptr<Geometry> current_geometry;
   std::vector<Light> current_lights;
   Camera current_camera;
   Color background_color;

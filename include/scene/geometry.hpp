@@ -11,7 +11,6 @@
 class Geometry
 {
 public:
-  Geometry() = default;
   Geometry(const std::shared_ptr<const std::vector<Object>>& objects,
            const InterpolatableData<ObjectInstance>& object_instances,
            const std::shared_ptr<const std::vector<Material>>& materials,
@@ -25,11 +24,11 @@ public:
   bool intersect(const Ray& ray, HitInfo& hit_info) const;
 
 private:
-  std::shared_ptr<const std::vector<Object>> objects;
-  InterpolatableData<ObjectInstance> instances;
-  std::shared_ptr<const std::vector<Material>> materials;
-  std::shared_ptr<const std::vector<Texture>> textures;
-  BVH<ObjectInstance> bvh;
+  const std::shared_ptr<const std::vector<Object>> objects;
+  const InterpolatableData<ObjectInstance> instances;
+  const std::shared_ptr<const std::vector<Material>> materials;
+  const std::shared_ptr<const std::vector<Texture>> textures;
+  const BVH<ObjectInstance> bvh;
 };
 
 Geometry interpolate(const Geometry& a, const Geometry& b, float weight);
