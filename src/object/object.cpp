@@ -10,8 +10,8 @@ Object::Object(const std::vector<Vertex>& vertices, const std::vector<uint32_t>&
   init(vertices, indices, compute_normals);
 }
 
-Object::Object(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::vector<Mesh>& meshes, bool compute_normals) :
-  vertices(std::make_shared<std::vector<Vertex>>(vertices)), meshes(meshes)
+Object::Object(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::vector<Mesh>& meshes, const std::vector<Mesh>& emissive_meshes, bool compute_normals) :
+  vertices(std::make_shared<std::vector<Vertex>>(vertices)), meshes(meshes), emissive_meshes(emissive_meshes)
 {
   init(vertices, indices, compute_normals);
 }
@@ -30,9 +30,20 @@ bool Object::intersect(const Ray& ray, HitInfo& hit_info) const
 {
   // if no intersection was found return false
   if (!bvh.intersect(ray, hit_info, triangles)) return false;
+  const auto contains_triangle = [](const HitInfo& hit_info, const Mesh& mesh) -> bool {
+    return (hit_info.object_id >= mesh.triangle_index_offset && hit_info.object_id < (mesh.triangle_index_offset + mesh.triangle_index_count));
+  };
   for (const auto& mesh : meshes)
   {
-    if (hit_info.object_id >= mesh.triangle_index_offset && hit_info.object_id < (mesh.triangle_index_offset + mesh.triangle_index_count))
+    if (contains_triangle(hit_info, mesh))
+    {
+      if (mesh.material_id >= 0) hit_info.material_id = mesh.material_id;
+      return true;
+    }
+  }
+  for (const auto& mesh : emissive_meshes)
+  {
+    if (contains_triangle(hit_info, mesh))
     {
       if (mesh.material_id >= 0) hit_info.material_id = mesh.material_id;
       return true;

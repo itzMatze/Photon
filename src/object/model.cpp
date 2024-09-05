@@ -13,18 +13,25 @@
 
 namespace GLTFModel
 {
+struct MaterialIndex
+{
+  int32_t idx;
+  bool emissive;
+};
+
 struct ModelData
 {
   std::vector<Mesh> meshes;
+  std::vector<Mesh> emissive_meshes;
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
   std::vector<int32_t> texture_indices;
-  std::vector<int32_t> material_indices;
+  std::vector<MaterialIndex> material_indices;
 };
 
-int32_t load_material(SceneBuilder& scene_builder, int mat_id, const tinygltf::Model& model, ModelData& model_data)
+MaterialIndex load_material(SceneBuilder& scene_builder, int mat_id, const tinygltf::Model& model, ModelData& model_data)
 {
-  if (model_data.material_indices[mat_id] > -1) return model_data.material_indices[mat_id];
+  if (model_data.material_indices[mat_id].idx > -1) return model_data.material_indices[mat_id];
   const tinygltf::Material& mat = model.materials[mat_id];
 
   auto get_texture = [&](const std::string& name) -> int32_t {
@@ -67,7 +74,8 @@ int32_t load_material(SceneBuilder& scene_builder, int mat_id, const tinygltf::M
   {
     material.transmission = mat.extensions.at("KHR_materials_transmission").Get("transmissionFactor").GetNumberAsDouble();
   }
-  model_data.material_indices[mat_id] = scene_builder.get_geometry().add_material(material);
+  if (glm::dot(material.emission, material.emission) > 0.0f && material.emission_strength > 0.0f) model_data.material_indices[mat_id].emissive = true;
+  model_data.material_indices[mat_id].idx = scene_builder.get_geometry().add_material(material);
   return model_data.material_indices[mat_id];
 }
 
@@ -156,7 +164,10 @@ void process_mesh(SceneBuilder& scene_builder, const tinygltf::Mesh& mesh, const
     }
     if (model_data.material_indices.size() > 0 && primitive.material > -1)
     {
-      model_data.meshes.push_back(Mesh(load_material(scene_builder, primitive.material, model, model_data), idx_count, model_data.indices.size() - idx_count));
+      MaterialIndex mat_idx = load_material(scene_builder, primitive.material, model, model_data);
+      const Mesh mesh(mat_idx.idx, idx_count, model_data.indices.size() - idx_count);
+      if (!mat_idx.emissive) model_data.meshes.push_back(mesh);
+      else model_data.emissive_meshes.push_back(mesh);
     }
     else
     {
@@ -199,7 +210,7 @@ int32_t load(SceneBuilder& scene_builder, const std::string& model_path, bool lo
   if (load_materials)
   {
     model_data.texture_indices.resize(model.textures.size(), -1);
-    model_data.material_indices.resize(model.materials.size(), -1);
+    model_data.material_indices.resize(model.materials.size(), MaterialIndex{-1, false});
   }
 
   const tinygltf::Scene& scene = model.scenes[model.defaultScene > -1 ? model.defaultScene : 0];
@@ -209,6 +220,6 @@ int32_t load(SceneBuilder& scene_builder, const std::string& model_path, bool lo
     process_node(scene_builder, model.nodes[node_idx], model, glm::mat4(1.0f), model_data);
   }
   phlog::debug("Successfully loaded glb \"{}\" in {}ms", path, t.elapsed<std::milli>());
-  return scene_builder.get_geometry().add_object(Object(model_data.vertices, model_data.indices, model_data.meshes));
+  return scene_builder.get_geometry().add_object(Object(model_data.vertices, model_data.indices, model_data.meshes, model_data.emissive_meshes));
 }
 } // namespace GLTFModel
