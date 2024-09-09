@@ -1,5 +1,6 @@
 #include "scene/scene.hpp"
 #include <cassert>
+#include <memory>
 
 Scene::Scene(const std::vector<std::shared_ptr<Geometry>>& geometry_keyframes,
              const std::vector<std::shared_ptr<InterpolatableData<Light>>>& light_keyframes,
@@ -13,6 +14,11 @@ Scene::Scene(const std::vector<std::shared_ptr<Geometry>>& geometry_keyframes,
              background_color(background_color),
              current_keyframe(0),
              current_frame_step(0)
+{
+  init();
+}
+
+void Scene::init()
 {
   assert(geometry_keyframes.size() == camera_keyframes.size() && geometry_keyframes.size() == (frame_counts.size() + 1));
   assert(geometry_keyframes.size() > 0 && camera_keyframes.size() > 0);

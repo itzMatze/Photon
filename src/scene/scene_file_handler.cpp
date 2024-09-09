@@ -204,7 +204,7 @@ int load_scene_file(const std::string& file_path, SceneFile& scene_file)
   load_objects(doc["objects"].GetArray(), scene_builder, indices_map);
   load_instances(doc["instances"].GetArray(), scene_builder, indices_map);
 
-  scene_file.scene = std::make_shared<Scene>(scene_builder.build_scene());
+  scene_file.scene = scene_builder.build_scene();
   phlog::info("Successfully loaded scene from file \"{}\" in {}ms", path, t.elapsed<std::milli>());
   return 0;
 }

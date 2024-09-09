@@ -71,10 +71,10 @@ CameraConfig& SceneBuilder::get_camera()
   return *camera_keyframes.back();
 }
 
-Scene SceneBuilder::build_scene()
+std::shared_ptr<Scene> SceneBuilder::build_scene()
 {
   std::vector<std::shared_ptr<Geometry>> geometries;
   for (const auto& geometry : geometry_keyframes) geometries.push_back(std::make_shared<Geometry>(geometry->build_geometry()));
-  return Scene(geometries, light_keyframes, camera_keyframes, frame_counts, background_color);
+  return std::make_shared<Scene>(geometries, light_keyframes, camera_keyframes, frame_counts, background_color);
 }
 

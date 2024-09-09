@@ -25,7 +25,7 @@ public:
   CameraConfig& get_camera();
 
   void set_background(const Color& color);
-  Scene build_scene();
+  std::shared_ptr<Scene> build_scene();
 
 private:
   std::vector<std::shared_ptr<GeometryBuilder>> geometry_keyframes;

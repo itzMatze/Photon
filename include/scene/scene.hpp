@@ -11,12 +11,14 @@
 class Scene
 {
 public:
-  Scene() = default;
   Scene(const std::vector<std::shared_ptr<Geometry>>& geometry_keyframes,
         const std::vector<std::shared_ptr<InterpolatableData<Light>>>& light_keyframes,
         const std::vector<std::shared_ptr<CameraConfig>>& camera_keyframes,
         const std::vector<uint32_t>& frame_counts,
         const Color& background_color);
+  Scene(Scene& scene) = delete;
+  Scene(Scene&& scene) = delete;
+  void init();
 
   Color get_background_color() const;
   const Geometry& get_geometry() const;

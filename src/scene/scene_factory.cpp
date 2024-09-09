@@ -7,7 +7,7 @@
 #include "scene/scene_builder.hpp"
 #include "scene/scene_file_handler.hpp"
 
-Scene create_single_triangle_scene()
+std::shared_ptr<Scene> create_single_triangle_scene()
 {
   SceneBuilder scene_builder;
   scene_builder.get_geometry().add_material(MaterialParameters{.albedo = glm::vec3(0.99, 0.01, 0.55), .show_albedo = true});
@@ -21,7 +21,7 @@ Scene create_single_triangle_scene()
   return scene_builder.build_scene();
 }
 
-Scene create_triple_triangle_scene()
+std::shared_ptr<Scene> create_triple_triangle_scene()
 {
   SceneBuilder scene_builder;
   scene_builder.get_geometry().add_material(MaterialParameters{.albedo = glm::vec3(0.99, 0.01, 0.55), .show_albedo = true});
@@ -66,7 +66,7 @@ Object add_star(float inner_radius, float tip_length, uint32_t tip_count) {
   return Object(vertices, indices, true);
 }
 
-Scene create_pyramid_star_scene()
+std::shared_ptr<Scene> create_pyramid_star_scene()
 {
   SceneBuilder scene_builder;
   scene_builder.get_geometry().add_material(MaterialParameters{.albedo = glm::vec3(0.99, 0.01, 0.55), .show_albedo = true});
