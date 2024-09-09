@@ -5,7 +5,7 @@
 #include <numeric>
 #include <vector>
 
-template<typename Precision = float>
+template<typename Precision = double>
 class DiscreteDistribution
 {
 public:
@@ -39,7 +39,7 @@ public:
 
   Precision get_probability(uint32_t index) const
   {
-    PH_ASSERT(index <= probabilities.size() && index > 0, "Index outside of probabilities list!");
+    PH_ASSERT(index < probabilities.size() - 1 && index >= 0, "Index outside of probabilities list!");
     return probabilities[index + 1] - probabilities[index];
   }
 
