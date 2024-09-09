@@ -10,7 +10,7 @@
 std::shared_ptr<Scene> create_single_triangle_scene()
 {
   SceneBuilder scene_builder;
-  scene_builder.get_geometry().add_material(MaterialParameters{.albedo = glm::vec3(0.99, 0.01, 0.55), .show_albedo = true});
+  scene_builder.get_geometry().add_material(MaterialParameters{.albedo = Color(0.99, 0.01, 0.55), .show_albedo = true});
   const std::vector<Vertex> vertices{
     glm::vec3(-1.0, -1.0, -5.0),
     glm::vec3(1.0, -1.0, -5.0),
@@ -24,7 +24,7 @@ std::shared_ptr<Scene> create_single_triangle_scene()
 std::shared_ptr<Scene> create_triple_triangle_scene()
 {
   SceneBuilder scene_builder;
-  scene_builder.get_geometry().add_material(MaterialParameters{.albedo = glm::vec3(0.99, 0.01, 0.55), .show_albedo = true});
+  scene_builder.get_geometry().add_material(MaterialParameters{.albedo = Color(0.99, 0.01, 0.55), .show_albedo = true});
   const std::vector<Vertex> vertices{
     glm::vec3(-1.0, -1.0, -5.0),
     glm::vec3(1.0, -1.0, -5.0),
@@ -69,7 +69,7 @@ Object add_star(float inner_radius, float tip_length, uint32_t tip_count) {
 std::shared_ptr<Scene> create_pyramid_star_scene()
 {
   SceneBuilder scene_builder;
-  scene_builder.get_geometry().add_material(MaterialParameters{.albedo = glm::vec3(0.99, 0.01, 0.55), .show_albedo = true});
+  scene_builder.get_geometry().add_material(MaterialParameters{.albedo = Color(0.99, 0.01, 0.55), .show_albedo = true});
   std::vector<uint32_t> object_instance_ids;
   // pyramid
   {
