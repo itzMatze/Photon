@@ -74,7 +74,7 @@ void load_materials(const auto& rj_materials, SceneBuilder& scene_builder, std::
   {
     MaterialParameters mat_params;
     const std::string material_key = material_key_prefix + material["name"].GetString();
-    if (material.HasMember("albedo")) mat_params.albedo = get_vec3(material["albedo"]);
+    if (material.HasMember("albedo")) mat_params.albedo = Color(get_vec3(material["albedo"]));
     if (material.HasMember("albedo_texture_name")) mat_params.albedo_texture_id = indices_map.at(texture_key_prefix + material["albedo_texture_name"].GetString());
     if (material.HasMember("emission")) mat_params.emission = get_vec3(material["emission"]);
     if (material.HasMember("emission_strength")) mat_params.emission_strength = material["emission_strength"].GetFloat();

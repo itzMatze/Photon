@@ -1,6 +1,5 @@
 #include "object/model.hpp"
 
-#include <iostream>
 #include <string>
 
 #include "image/image_file_handler.hpp"
@@ -45,7 +44,7 @@ int32_t load_material(SceneBuilder& scene_builder, int mat_id, const tinygltf::M
   //material.occlusion_texture = get_texture("occlusionTexture", 1);
   if (mat.values.find("baseColorFactor") != mat.values.end())
   {
-    material.albedo = glm::vec4(glm::make_vec4(mat.values.at("baseColorFactor").ColorFactor().data()));
+    material.albedo = Color(glm::vec4(glm::make_vec4(mat.values.at("baseColorFactor").ColorFactor().data())));
   }
   if (mat.values.find("metallicFactor") != mat.values.end())
   {
