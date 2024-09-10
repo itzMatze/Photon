@@ -18,6 +18,7 @@ public:
   template<typename T>
   DiscreteDistribution(const std::vector<T>& weights)
   {
+    PH_ASSERT(weights.size() > 0, "Weight list must not be empty!");
     double total_weight = std::reduce(weights.begin(), weights.end());
     probabilities.push_back(0.0);
     for (T weight : weights)
