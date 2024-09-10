@@ -46,7 +46,7 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates)
       }
       else
       {
-        if (material.is_light_dependent())
+        if (!material.is_delta())
         {
           for (const auto& light : scene_file.scene->get_lights())
           {

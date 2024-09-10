@@ -54,7 +54,6 @@ public:
   void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples, RandomGenerator* rnd = nullptr) const;
   // is material dirac delta reflective or refractive
   bool is_delta() const;
-  bool is_light_dependent() const;
 
 private:
   std::shared_ptr<const std::vector<Texture>> textures;

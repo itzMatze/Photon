@@ -102,8 +102,3 @@ bool Material::is_delta() const
 {
   return (params.metallic == 1.0f || params.transmission == 1.0f) && (params.roughness == 0.0f);
 }
-
-bool Material::is_light_dependent() const
-{
-  return (!params.show_albedo && !params.show_bary && !params.show_normal && !params.show_tex_coords);
-}
