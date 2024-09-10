@@ -12,6 +12,7 @@ public:
   ObjectInstance(std::shared_ptr<const std::vector<Object>> objects, uint32_t object_id, int32_t material_id, const SpatialConfiguration& spatial_conf);
   AABB get_world_space_bounding_box() const;
   const std::shared_ptr<const std::vector<Object>> get_objects() const;
+  const Object& get_object() const;
   const SpatialConfiguration& get_spatial_conf() const;
   SpatialConfiguration& get_spatial_conf();
   void set_spatial_conf(const SpatialConfiguration& spatial_configuration);

@@ -24,6 +24,7 @@ void Scene::init()
   assert(geometry_keyframes.size() > 0 && camera_keyframes.size() > 0);
   current_geometry = geometry_keyframes[0];
   current_lights = light_keyframes[0]->get_data();
+  current_light_sampler = std::make_shared<LightSampler>(current_lights, current_geometry);
   current_camera = Camera(*camera_keyframes[0]);
 }
 
@@ -47,6 +48,11 @@ const Camera& Scene::get_camera() const
   return current_camera;
 }
 
+const LightSampler& Scene::get_light_sampler() const
+{
+  return *current_light_sampler;
+}
+
 bool Scene::step()
 {
   // if no keyframe is left return false
@@ -57,6 +63,7 @@ bool Scene::step()
   float weight = float(current_frame_step) / float(frame_count);
   current_geometry = std::make_shared<Geometry>(interpolate(*geometry_keyframes[current_keyframe], *geometry_keyframes[current_keyframe + 1], weight));
   current_lights = interpolate(*light_keyframes[current_keyframe], *light_keyframes[current_keyframe + 1], weight).get_data();
+  current_light_sampler = std::make_shared<LightSampler>(current_lights, current_geometry);
   CameraConfig interpolated_cam = interpolate(*camera_keyframes[current_keyframe], *camera_keyframes[current_keyframe + 1], weight);
   current_camera = Camera(interpolated_cam);
 

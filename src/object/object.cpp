@@ -16,14 +16,24 @@ Object::Object(const std::vector<Vertex>& vertices, const std::vector<uint32_t>&
   init(vertices, indices, compute_normals);
 }
 
+const std::shared_ptr<std::vector<Vertex>> Object::get_vertices() const
+{
+  return vertices;
+}
+
 const std::vector<Triangle>& Object::get_triangles() const
 {
   return triangles;
 }
 
-const std::shared_ptr<std::vector<Vertex>> Object::get_vertices() const
+const std::vector<Mesh>& Object::get_meshes() const
 {
-  return vertices;
+  return meshes;
+}
+
+const std::vector<Mesh>& Object::get_emissive_meshes() const
+{
+  return emissive_meshes;
 }
 
 bool Object::intersect(const Ray& ray, HitInfo& hit_info) const

@@ -11,6 +11,7 @@ set(SOURCE_FILES
   src/object/aabb.cpp
   src/object/bvh.cpp
   src/object/light.cpp
+  src/object/light_sampler.cpp
   src/object/material.cpp
   src/object/model.cpp
   src/object/object.cpp

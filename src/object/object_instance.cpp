@@ -24,6 +24,11 @@ const std::shared_ptr<const std::vector<Object>> ObjectInstance::get_objects() c
   return objects;
 }
 
+const Object& ObjectInstance::get_object() const
+{
+  return (*objects)[object_id];
+}
+
 const SpatialConfiguration& ObjectInstance::get_spatial_conf() const
 {
   return spatial_conf;

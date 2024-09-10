@@ -120,3 +120,8 @@ bool Triangle::intersect(const AABB& aabb, bool accurate) const
 {
   return triangle_aabb_intersection(aabb, (*vertices)[vertex_indices[0]].pos, (*vertices)[vertex_indices[1]].pos, (*vertices)[vertex_indices[2]].pos);
 }
+
+glm::vec3 Triangle::get_geometric_normal() const
+{
+  return geometric_normal;
+}

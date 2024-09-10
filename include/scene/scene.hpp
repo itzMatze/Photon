@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include "object/light.hpp"
+#include "object/light_sampler.hpp"
 #include "renderer/camera.hpp"
 #include "renderer/color.hpp"
 #include "scene/geometry.hpp"
@@ -24,6 +25,7 @@ public:
   const Geometry& get_geometry() const;
   const std::vector<Light>& get_lights() const;
   const Camera& get_camera() const;
+  const LightSampler& get_light_sampler() const;
   bool step();
   bool is_animated() const;
 
@@ -34,6 +36,7 @@ private:
   std::vector<uint32_t> frame_counts;
   std::shared_ptr<Geometry> current_geometry;
   std::vector<Light> current_lights;
+  std::shared_ptr<LightSampler> current_light_sampler;
   Camera current_camera;
   Color background_color;
   uint32_t current_keyframe;

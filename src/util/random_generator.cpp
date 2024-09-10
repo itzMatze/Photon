@@ -16,6 +16,11 @@ uint32_t get_seed()
 RandomGenerator::RandomGenerator(uint32_t seed) : distribution(std::uniform_real_distribution<float>(0.0f, 1.0f)), generator(std::mt19937(seed))
 {}
 
+std::mt19937& RandomGenerator::get_generator()
+{
+  return generator;
+}
+
 float RandomGenerator::random_float(float lower_bound, float upper_bound)
 {
   return distribution(generator) * (upper_bound - lower_bound) + lower_bound;
@@ -24,6 +29,17 @@ float RandomGenerator::random_float(float lower_bound, float upper_bound)
 int32_t RandomGenerator::random_int32(int32_t lower_bound, int32_t upper_bound)
 {
   return random_float(lower_bound, upper_bound);
+}
+
+glm::vec2 RandomGenerator::random_barycentrics()
+{
+  glm::vec2 bary(random_float(), random_float());
+  if (bary.s + bary.t > 1.0f)
+  {
+    bary.s = 1.0f - bary.s;
+    bary.t = 1.0f - bary.t;
+  }
+  return bary;
 }
 
 namespace rng

@@ -14,6 +14,7 @@ public:
   void add_normal_to_vertices(std::vector<Vertex>& vertices) const;
   const Vertex& get_triangle_vertex(uint32_t idx) const;
   AABB get_bounding_box() const;
+  glm::vec3 get_geometric_normal() const;
 
   bool intersect(const Ray& ray, HitInfo& hit_info) const;
   bool intersect(const AABB& aabb, bool accurate = true) const;

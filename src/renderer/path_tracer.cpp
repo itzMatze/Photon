@@ -1,7 +1,10 @@
+#include "object/light_sampler.hpp"
 #include "renderer/bucket_rendering.hpp"
 #include "renderer/camera.hpp"
 #include "renderer/output.hpp"
+#include "renderer/ray.hpp"
 #include "renderer/rendering_algorithms.hpp"
+#include "spdlog/spdlog.h"
 #include "util/random_generator.hpp"
 #include <thread>
 
@@ -13,13 +16,14 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGen
     Ray ray;
     glm::vec3 attenuation;
     uint32_t depth;
+    bool is_delta;
   };
   std::vector<PathVertex> path_vertices;
   std::vector<BSDFSample> bsdf_samples;
   HitInfo hit_info;
   Material default_material;
   // add initial vertex of the camera
-  path_vertices.push_back(PathVertex{scene_file.scene->get_camera().get_ray(camera_coordinates), glm::vec3(1.0, 1.0, 1.0), 0});
+  path_vertices.push_back(PathVertex{scene_file.scene->get_camera().get_ray(camera_coordinates), glm::vec3(1.0, 1.0, 1.0), 0, true});
   Color color(0.0, 0.0, 0.0);
   // trace rays as long as there are rays left to trace
   while (!path_vertices.empty())
@@ -29,7 +33,7 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGen
     if (scene_file.scene->get_geometry().intersect(path_vertex.ray, hit_info))
     {
       const Material& material = (hit_info.material_id == -1) ? default_material : scene_file.scene->get_geometry().get_material(hit_info.material_id);
-      color += path_vertex.attenuation * material.get_emission(hit_info);
+      if (path_vertex.depth == 0) color += path_vertex.attenuation * material.get_emission(hit_info);
       const uint32_t depth = path_vertex.depth + 1;
       if (depth < scene_file.settings.max_path_length)
       {
@@ -37,28 +41,23 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGen
         material.get_bsdf_samples(hit_info, path_vertex.ray.get_dir(), bsdf_samples, &rnd);
         for (const auto& bsdf_sample : bsdf_samples)
         {
-          const PathVertex next_path_vertex{bsdf_sample.ray, path_vertex.attenuation * bsdf_sample.attenuation, depth};
+          const PathVertex next_path_vertex{bsdf_sample.ray, path_vertex.attenuation * bsdf_sample.attenuation, depth, material.is_delta()};
           path_vertices.push_back(next_path_vertex);
         }
       }
       if (!material.is_delta())
       {
-        if (material.is_light_dependent())
+        LightSample light_sample = scene_file.scene->get_light_sampler().sample(hit_info, rnd);
+        const glm::vec3 outgoing_dir = glm::normalize(light_sample.pos - hit_info.pos);
+        const glm::vec3 attenuation = material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir);
+        if (glm::dot(attenuation, attenuation) < 0.0000001f) continue;
+        const float light_distance = glm::distance(light_sample.pos, hit_info.pos) - 2 * RAY_START_OFFSET;
+        // trace shadow ray with small offset in the direction of the normal to avoid shadow acne
+        const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.get_oriented_face_geometric_normal(), outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
+        HitInfo shadow_hit_info;
+        if (!scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info))
         {
-          for (const auto& light : scene_file.scene->get_lights())
-          {
-            const glm::vec3 outgoing_dir = glm::normalize(light.get_position() - hit_info.pos);
-            const glm::vec3 attenuation = material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir);
-            if (glm::dot(attenuation, attenuation) < 0.0000001f) continue;
-            const float light_distance = glm::length(light.get_position() - hit_info.pos);
-            // trace shadow ray with small offset in the direction of the normal to avoid shadow acne
-            const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.get_oriented_face_geometric_normal(), outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
-            HitInfo shadow_hit_info;
-            if (scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info)) continue;
-            glm::vec3 contribution = light.get_contribution(hit_info.pos);
-            contribution *= path_vertex.attenuation * attenuation;
-            color += contribution;
-          }
+          color += (light_sample.emission * path_vertex.attenuation * attenuation);
         }
       }
     }
