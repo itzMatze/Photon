@@ -37,7 +37,7 @@ void SpatialConfiguration::rotate(glm::vec3 angles, bool use_radian)
 
 void SpatialConfiguration::rotate(float yaw, float pitch, float roll, bool use_radian)
 {
-  // calculate incremental change in angles with respect to camera coordinate system
+  // calculate incremental change in angles with respect to current coordinate system
   if (!use_radian)
   {
     yaw = yaw * (M_PI / 180.0);
@@ -48,7 +48,7 @@ void SpatialConfiguration::rotate(float yaw, float pitch, float roll, bool use_r
   glm::quat q_pitch = glm::angleAxis(pitch, local_x_axis);
   glm::quat q_roll = glm::angleAxis(roll, local_z_axis);
 
-  // apply incremental change to camera orientation
+  // apply incremental change to orientation
   orientation = glm::normalize(q_yaw * q_pitch * q_roll * orientation);
   update_coordinate_system();
 }
