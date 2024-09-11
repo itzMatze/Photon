@@ -73,7 +73,7 @@ MaterialIndex load_material(SceneBuilder& scene_builder, int mat_id, const tinyg
   {
     material.transmission = mat.extensions.at("KHR_materials_transmission").Get("transmissionFactor").GetNumberAsDouble();
   }
-  if (glm::dot(material.emission, material.emission) > 0.0f && material.emission_strength > 0.0f) model_data.material_indices[mat_id].emissive = true;
+  if (material.is_emissive()) model_data.material_indices[mat_id].emissive = true;
   model_data.material_indices[mat_id].idx = scene_builder.get_geometry().add_material(material);
   return model_data.material_indices[mat_id];
 }

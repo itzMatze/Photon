@@ -9,7 +9,7 @@ class ObjectInstance
 {
 public:
   ObjectInstance(uint32_t object_id);
-  ObjectInstance(std::shared_ptr<const std::vector<Object>> objects, uint32_t object_id, int32_t material_id, const SpatialConfiguration& spatial_conf);
+  ObjectInstance(std::shared_ptr<const std::vector<Object>> objects, uint32_t object_id, int32_t material_id, bool is_emissive, const SpatialConfiguration& spatial_conf);
   AABB get_world_space_bounding_box() const;
   const std::shared_ptr<const std::vector<Object>> get_objects() const;
   const Object& get_object() const;
@@ -20,6 +20,7 @@ public:
   bool intersect(const AABB& aabb) const;
 
   int32_t material_id;
+  bool is_emissive;
   uint32_t object_id;
 
 private:

@@ -5,6 +5,11 @@
 #include "glm/geometric.hpp"
 #include <memory>
 
+bool MaterialParameters::is_emissive() const
+{
+  return (glm::dot(emission, emission) > 0.0f && emission_strength > 0.0f);
+}
+
 Material::Material(std::shared_ptr<const std::vector<Texture>> textures, const MaterialParameters& params) : textures(textures), params(params)
 {}
 
@@ -101,4 +106,9 @@ void Material::get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incide
 bool Material::is_delta() const
 {
   return (params.metallic == 1.0f || params.transmission == 1.0f) && (params.roughness == 0.0f);
+}
+
+bool Material::is_emissive() const
+{
+  return params.is_emissive();
 }

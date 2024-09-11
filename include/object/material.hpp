@@ -30,6 +30,8 @@ struct MaterialParameters
   bool show_bary = false;
   bool show_normal = false;
   bool show_tex_coords = false;
+
+  bool is_emissive() const;
 };
 
 struct BSDFSample
@@ -54,6 +56,7 @@ public:
   void get_bsdf_samples(const HitInfo& hit_info, const glm::vec3& incident_dir, std::vector<BSDFSample>& samples, RandomGenerator* rnd = nullptr) const;
   // is material dirac delta reflective or refractive
   bool is_delta() const;
+  bool is_emissive() const;
 
 private:
   std::shared_ptr<const std::vector<Texture>> textures;

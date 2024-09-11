@@ -4,7 +4,7 @@
 ObjectInstance::ObjectInstance(uint32_t object_id) : object_id(object_id)
 {}
 
-ObjectInstance::ObjectInstance(std::shared_ptr<const std::vector<Object>> objects, uint32_t object_id, int32_t material_id, const SpatialConfiguration& spatial_conf)
+ObjectInstance::ObjectInstance(std::shared_ptr<const std::vector<Object>> objects, uint32_t object_id, int32_t material_id, bool is_emissive, const SpatialConfiguration& spatial_conf)
   : objects(objects), object_id(object_id), material_id(material_id), spatial_conf(spatial_conf)
 {}
 
@@ -68,5 +68,5 @@ bool ObjectInstance::intersect(const AABB& aabb) const
 ObjectInstance interpolate(const ObjectInstance& a, const ObjectInstance& b, float weight)
 {
   SpatialConfiguration spatial_conf = interpolate(a.get_spatial_conf(), b.get_spatial_conf(), weight);
-  return ObjectInstance(a.get_objects(), a.object_id, a.material_id, spatial_conf);
+  return ObjectInstance(a.get_objects(), a.object_id, a.material_id, a.is_emissive, spatial_conf);
 }
