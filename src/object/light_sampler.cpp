@@ -8,54 +8,62 @@ LightSampler::LightSampler(const std::vector<Light>& lights, const std::shared_p
 {
   const std::vector<ObjectInstance>& object_instances = geometry->get_interpolatable_object_instances().get_data();
   // create uniform distribution for everything
-  std::vector<uint32_t> light_weights(lights.size(), 1);
-  light_distribution = DiscreteDistribution(light_weights);
+  if (lights.size() > 0)
+  {
+    std::vector<uint32_t> light_weights(lights.size(), 1);
+    light_distribution = DiscreteDistribution(light_weights);
+  }
   for (uint32_t i = 0; i < object_instances.size(); i++)
   {
     const ObjectInstance& instance = object_instances[i];
     // an instance can be assigned a material that overrides the mesh materials
     if ((instance.material_id == -1 && instance.get_object().get_emissive_meshes().size() > 0) || instance.is_emissive) emissive_instance_indices.push_back(i);
   }
-  std::vector<uint32_t> instance_weights(emissive_instance_indices.size(), 1);
-  instance_distribution = DiscreteDistribution(instance_weights);
-  std::vector<uint32_t> mesh_weights;
-  std::vector<uint32_t> triangle_weights;
-  // create a separate distribution over meshes for each instance
-  for (uint32_t i = 0; i < emissive_instance_indices.size(); i++)
+  if (emissive_instance_indices.size() > 0)
   {
-    const ObjectInstance& instance = object_instances[emissive_instance_indices[i]];
-    const std::vector<Mesh>& emissive_meshes = instance.get_object().get_emissive_meshes();
-    // if instance does not contain emissive meshes it is emissive by itself
-    const uint32_t emissive_mesh_count = std::max(1ul, emissive_meshes.size());
-    mesh_weights.resize(emissive_mesh_count, 1);
-    InstanceDistributionsEntry instance_distributions_entry;
-    instance_distributions_entry.mesh_distribution = DiscreteDistribution(mesh_weights);
-    instance_distributions_entry.triangle_distributions_offset = triangle_distributions.size();
-    instance_distributions_entry.triangle_distributions_count = emissive_mesh_count;
-    mesh_distributions.push_back(instance_distributions_entry);
-    if (emissive_meshes.size() > 0)
+    std::vector<uint32_t> instance_weights(emissive_instance_indices.size(), 1);
+    instance_distribution = DiscreteDistribution(instance_weights);
+    std::vector<uint32_t> mesh_weights;
+    std::vector<uint32_t> triangle_weights;
+    // create a separate distribution over meshes for each instance
+    for (uint32_t i = 0; i < emissive_instance_indices.size(); i++)
     {
-      // create a separate distribution over triangles for each mesh in an instance
-      for (const Mesh& mesh : emissive_meshes)
+      const ObjectInstance& instance = object_instances[emissive_instance_indices[i]];
+      const std::vector<Mesh>& emissive_meshes = instance.get_object().get_emissive_meshes();
+      // if instance does not contain emissive meshes it is emissive by itself
+      const uint32_t emissive_mesh_count = std::max(1ul, emissive_meshes.size());
+      mesh_weights.resize(emissive_mesh_count, 1);
+      InstanceDistributionsEntry instance_distributions_entry;
+      instance_distributions_entry.mesh_distribution = DiscreteDistribution(mesh_weights);
+      instance_distributions_entry.triangle_distributions_offset = triangle_distributions.size();
+      instance_distributions_entry.triangle_distributions_count = emissive_mesh_count;
+      mesh_distributions.push_back(instance_distributions_entry);
+      if (emissive_meshes.size() > 0)
       {
-        triangle_weights.resize(mesh.triangle_index_count, 1);
+        // create a separate distribution over triangles for each mesh in an instance
+        for (const Mesh& mesh : emissive_meshes)
+        {
+          triangle_weights.resize(mesh.triangle_index_count, 1);
+          triangle_distributions.push_back(DiscreteDistribution(triangle_weights));
+        }
+      }
+      else
+    {
+        triangle_weights.resize(instance.get_object().get_triangles().size(), 1);
         triangle_distributions.push_back(DiscreteDistribution(triangle_weights));
       }
     }
-    else
-    {
-      triangle_weights.resize(instance.get_object().get_triangles().size(), 1);
-      triangle_distributions.push_back(DiscreteDistribution(triangle_weights));
-    }
   }
+  std::vector<uint32_t> mesh_lights_weights({uint32_t(emissive_instance_indices.size() * 2), uint32_t(lights.size())});
+  mesh_lights_distribution = DiscreteDistribution(mesh_lights_weights);
 }
 
 LightSample LightSampler::sample(const HitInfo& hit_info, RandomGenerator& rnd) const
 {
   const std::vector<ObjectInstance>& object_instances = geometry->get_interpolatable_object_instances().get_data();
-  float random_num = rnd.random_float();
-  LightSample light_sample{.pdf = 0.5f};
-  if (random_num > 0.5f)
+  uint32_t mesh_lights_index = mesh_lights_distribution.sample(rnd);
+  LightSample light_sample{.pdf = mesh_lights_distribution.get_probability(mesh_lights_index)};
+  if (mesh_lights_index == 0)
   {
     // sample instance and get probability of the chosen sample
     uint32_t instance_index = instance_distribution.sample(rnd);

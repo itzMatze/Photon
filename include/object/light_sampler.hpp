@@ -19,6 +19,7 @@ public:
   LightSampler(const std::vector<Light>& lights, const std::shared_ptr<Geometry> geometry);
   LightSample sample(const HitInfo& hit_info, RandomGenerator& rnd) const;
 private:
+  DiscreteDistribution<> mesh_lights_distribution;
   const std::vector<Light>& lights;
   // distribution over lights
   DiscreteDistribution<> light_distribution;
