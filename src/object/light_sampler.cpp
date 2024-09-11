@@ -54,8 +54,8 @@ LightSample LightSampler::sample(const HitInfo& hit_info, RandomGenerator& rnd) 
 {
   const std::vector<ObjectInstance>& object_instances = geometry->get_interpolatable_object_instances().get_data();
   float random_num = rnd.random_float();
-  LightSample light_sample{.pdf = 1.0f};
-  if (random_num > -0.5f)
+  LightSample light_sample{.pdf = 0.5f};
+  if (random_num > 0.5f)
   {
     // sample instance and get probability of the chosen sample
     uint32_t instance_index = instance_distribution.sample(rnd);
@@ -71,8 +71,10 @@ LightSample LightSampler::sample(const HitInfo& hit_info, RandomGenerator& rnd) 
       light_sample.pdf *= instance_distributions_entry.mesh_distribution.get_probability(mesh_index);
       const Mesh& mesh = instance.get_object().get_emissive_meshes()[mesh_index];
       // sample triangle and get probability of the chosen sample
-      triangle_index = mesh.triangle_index_offset + triangle_distributions[instance_distributions_entry.triangle_distributions_offset + mesh_index].sample(rnd);
+      triangle_index = triangle_distributions[instance_distributions_entry.triangle_distributions_offset + mesh_index].sample(rnd);
       light_sample.pdf *= triangle_distributions[instance_distributions_entry.triangle_distributions_offset + mesh_index].get_probability(triangle_index);
+      triangle_index += mesh.triangle_index_offset;
+      material_id = mesh.material_id;
     }
     else
     {
@@ -91,7 +93,7 @@ LightSample LightSampler::sample(const HitInfo& hit_info, RandomGenerator& rnd) 
     double triangle_area = glm::length(glm::cross(pos1 - pos0, pos2 - pos0)) / 2.0;
     light_sample.pdf *= 1.0 / triangle_area;
     const float distance = glm::distance(hit_info.pos, light_sample.pos);
-    const float cos_theta = std::max(0.0f, glm::dot(triangle.get_geometric_normal(), glm::normalize(hit_info.pos - light_sample.pos)));
+    const float cos_theta = std::max(0.0f, glm::dot(glm::normalize(instance.get_spatial_conf().transform_dir(triangle.get_geometric_normal())), glm::normalize(hit_info.pos - light_sample.pos)));
     light_sample.emission = (geometry->get_material(material_id).get_emission(hit_info) * cos_theta) / glm::vec3(light_sample.pdf * distance * distance);
   }
   else
