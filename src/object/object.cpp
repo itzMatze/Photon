@@ -79,6 +79,6 @@ void Object::init(const std::vector<Vertex>& vertices, const std::vector<uint32_
       if (glm::length(vertex.normal) > 0.0001) vertex.normal = glm::normalize(vertex.normal);
     }
   }
-  bvh = BVH<Triangle>(triangles, 1);
+  bvh = BVH<Triangle>(triangles, 2);
   spdlog::debug("Successfully created object");
 }
