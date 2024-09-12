@@ -1,11 +1,8 @@
 #include "object/object_instance.hpp"
 #include "util/spatial_configuration.hpp"
 
-ObjectInstance::ObjectInstance(uint32_t object_id) : object_id(object_id)
-{}
-
 ObjectInstance::ObjectInstance(std::shared_ptr<const std::vector<Object>> objects, uint32_t object_id, int32_t material_id, bool is_emissive, const SpatialConfiguration& spatial_conf)
-  : objects(objects), object_id(object_id), material_id(material_id), spatial_conf(spatial_conf)
+  : objects(objects), object_id(object_id), material_id(material_id), is_emissive(is_emissive), spatial_conf(spatial_conf)
 {}
 
 AABB ObjectInstance::get_world_space_bounding_box() const
