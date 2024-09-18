@@ -50,13 +50,23 @@ struct DirectionSample
   float pdf;
 };
 
-DirectionSample random_cosine_weighted_hemisphere(const glm::vec3 normal, RandomGenerator& rnd)
+DirectionSample random_cosine_weighted_hemisphere(const glm::vec3& normal, RandomGenerator& rnd)
 {
-  float a = 1.0f - 2.0f * rnd.random_float();
-  float b = std::sqrt(1.0f - a * a);
-  float phi = 2.0f * M_PI * rnd.random_float();
-  glm::vec3 dir = glm::vec3(normal.x + b * std::cos(phi), normal.y + b * std::sin(phi), normal.z + a);
-  DirectionSample dir_sample{.dir = glm::normalize(dir), .pdf = a / M_PIf};
+  glm::vec2 random_nums = glm::vec2(rnd.random_float(), rnd.random_float());
+  float r = std::sqrtf(random_nums.x);
+  float theta = 2.0 * M_PI * random_nums.y;
+
+  glm::vec3 axis = glm::abs(normal);
+  if(axis.x < axis.y && axis.x < axis.z) axis = glm::vec3(1.0f, 0.0f, 0.0f);
+  else if (axis.y < axis.z) axis = glm::vec3(0.0f, 1.0f, 0.0f);
+  else axis = glm::vec3(0.0f, 0.0f, 1.0f);
+
+  glm::vec3 bitangent = glm::cross(normal, axis);
+  glm::vec3 tangent = glm::cross(bitangent, normal);
+
+  glm::vec3 dir = glm::normalize(glm::vec3(r * std::sinf(theta), std::sqrtf(1.0 - random_nums.x), r * std::cosf(theta)));
+
+  DirectionSample dir_sample{.dir = glm::normalize(dir.x * bitangent + dir.y * normal + dir.z * tangent), .pdf = dir.y / M_PIf};
   return dir_sample;
 }
 
