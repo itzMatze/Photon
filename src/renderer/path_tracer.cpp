@@ -4,7 +4,6 @@
 #include "renderer/output.hpp"
 #include "renderer/ray.hpp"
 #include "renderer/rendering_algorithms.hpp"
-#include "spdlog/spdlog.h"
 #include "util/random_generator.hpp"
 #include <thread>
 
@@ -50,14 +49,14 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGen
         LightSample light_sample = scene_file.scene->get_light_sampler().sample(hit_info, rnd);
         const glm::vec3 outgoing_dir = glm::normalize(light_sample.pos - hit_info.pos);
         const glm::vec3 attenuation = material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir);
-        if (glm::dot(attenuation, attenuation) < 0.0000001f) continue;
-        const float light_distance = glm::distance(light_sample.pos, hit_info.pos) - 2 * RAY_START_OFFSET;
-        // trace shadow ray with small offset in the direction of the normal to avoid shadow acne
-        const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.get_oriented_face_geometric_normal(), outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
-        HitInfo shadow_hit_info;
-        if (!scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info))
+        const glm::vec3 contribution = (light_sample.emission * path_vertex.attenuation * attenuation);
+        if (glm::dot(contribution, contribution) > 0.0000001f)
         {
-          color += (light_sample.emission * path_vertex.attenuation * attenuation);
+          const float light_distance = glm::distance(light_sample.pos, hit_info.pos) - 4 * RAY_START_OFFSET;
+          // trace shadow ray with small offset in the direction of the normal to avoid shadow acne
+          const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.get_oriented_face_geometric_normal(), outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
+          HitInfo shadow_hit_info;
+          if (!scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info)) color += contribution;
         }
       }
     }

@@ -48,7 +48,7 @@ LightSampler::LightSampler(const std::vector<Light>& lights, const std::shared_p
         }
       }
       else
-    {
+      {
         triangle_weights.resize(instance.get_object().get_triangles().size(), 1);
         triangle_distributions.push_back(DiscreteDistribution(triangle_weights));
       }
@@ -60,7 +60,6 @@ LightSampler::LightSampler(const std::vector<Light>& lights, const std::shared_p
 
 LightSample LightSampler::sample(const HitInfo& hit_info, RandomGenerator& rnd) const
 {
-  const std::vector<ObjectInstance>& object_instances = geometry->get_interpolatable_object_instances().get_data();
   uint32_t mesh_lights_index = mesh_lights_distribution.sample(rnd);
   LightSample light_sample{.pdf = mesh_lights_distribution.get_probability(mesh_lights_index)};
   if (mesh_lights_index == 0)
@@ -68,6 +67,7 @@ LightSample LightSampler::sample(const HitInfo& hit_info, RandomGenerator& rnd) 
     // sample instance and get probability of the chosen sample
     uint32_t instance_index = instance_distribution.sample(rnd);
     light_sample.pdf *= instance_distribution.get_probability(instance_index);
+    const std::vector<ObjectInstance>& object_instances = geometry->get_interpolatable_object_instances().get_data();
     const ObjectInstance& instance = object_instances[emissive_instance_indices[instance_index]];
     const InstanceDistributionsEntry& instance_distributions_entry = mesh_distributions[instance_index];
     int32_t material_id = instance.material_id;
@@ -86,7 +86,7 @@ LightSample LightSampler::sample(const HitInfo& hit_info, RandomGenerator& rnd) 
     }
     else
     {
-      // if instance is emissive directly sample a triangle from the instance
+      // if instance is emissive, directly sample a triangle from the instance
       triangle_index = triangle_distributions[instance_distributions_entry.triangle_distributions_offset].sample(rnd);
       light_sample.pdf *= triangle_distributions[instance_distributions_entry.triangle_distributions_offset].get_probability(triangle_index);
     }
@@ -98,11 +98,13 @@ LightSample LightSampler::sample(const HitInfo& hit_info, RandomGenerator& rnd) 
     glm::vec3 pos2 = instance.get_spatial_conf().transform_pos(triangle.get_triangle_vertex(2).pos);
     glm::vec2 bary = rnd.random_barycentrics();
     light_sample.pos = bary.s * pos0 + bary.t * pos1 + (1.0f - bary.s - bary.t) * pos2;
-    double triangle_area = glm::length(glm::cross(pos1 - pos0, pos2 - pos0)) / 2.0;
+    const double triangle_area = glm::length(glm::cross(pos1 - pos0, pos2 - pos0)) / 2.0;
     light_sample.pdf *= 1.0 / triangle_area;
-    const float distance = glm::distance(hit_info.pos, light_sample.pos);
-    const float cos_theta = std::max(0.0f, glm::dot(glm::normalize(instance.get_spatial_conf().transform_dir(triangle.get_geometric_normal())), glm::normalize(hit_info.pos - light_sample.pos)));
-    light_sample.emission = (geometry->get_material(material_id).get_emission(hit_info) * cos_theta) / glm::vec3(light_sample.pdf * distance * distance);
+    const glm::vec3 world_space_normal = glm::normalize(instance.get_spatial_conf().transform_dir(triangle.get_geometric_normal()));
+    const glm::vec3 light_to_pos = hit_info.pos - light_sample.pos;
+    const float squared_distance = glm::dot(light_to_pos, light_to_pos);
+    const float cos_theta = std::max(0.0f, glm::dot(world_space_normal, glm::normalize(light_to_pos)));
+    light_sample.emission = (geometry->get_material(material_id).get_emission(hit_info) * cos_theta) / float(std::max(0.0000001, light_sample.pdf * squared_distance));
   }
   else
   {
