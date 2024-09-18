@@ -35,7 +35,7 @@ glm::vec3 Material::eval(const HitInfo& hit_info, const glm::vec3& incident_dir,
   if (is_delta()) return glm::vec3(0.0, 0.0, 0.0);
   const glm::vec3 normal = params.smooth_shading ? hit_info.get_oriented_face_normal() : hit_info.get_oriented_face_geometric_normal();
   const float cos_theta = glm::dot(outgoing_dir, normal);
-  return get_albedo(hit_info).value * std::max(0.0f, cos_theta);
+  return (get_albedo(hit_info).value * std::max(0.0f, cos_theta)) / M_PIf;
 }
 
 float fresnel_schlick(float cos_theta, float n_1, float n_2)
