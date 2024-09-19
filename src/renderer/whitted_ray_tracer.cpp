@@ -101,8 +101,8 @@ void render_buckets(const SceneFile* scene_file,
   (*signals_sender) |= SignalFlags::Done;
 }
 
-void whitted_ray_trace(const SceneFile& scene_file,
-                       const WhittedSettings& whitted_settings,
+void whitted_ray_trace(const WhittedSettings& whitted_settings,
+                       const SceneFile& scene_file,
                        std::shared_ptr<Output> output,
                        Signals* master_signals,
                        std::vector<Signals*>* thread_signals,

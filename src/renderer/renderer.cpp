@@ -76,12 +76,12 @@ bool Renderer::render_frame(SceneFile& scene_file, const Settings& settings)
   {
     case RenderingAlgorithms::WhittedRayTracing:
     {
-      rendering_main_thread = std::jthread(&whitted_ray_trace, scene_file, settings.whitted_settings, output, &master_signals, &thread_signals, settings.thread_count);
+      rendering_main_thread = std::jthread(&whitted_ray_trace, settings.whitted_settings, scene_file, output, &master_signals, &thread_signals, settings.thread_count);
       break;
     }
     case RenderingAlgorithms::PathTracing:
     {
-      rendering_main_thread = std::jthread(&path_trace, scene_file, settings.path_tracing_settings, output, &master_signals, &thread_signals, settings.thread_count);
+      rendering_main_thread = std::jthread(&path_trace, settings.path_tracing_settings, scene_file, output, &master_signals, &thread_signals, settings.thread_count);
       break;
     }
   }

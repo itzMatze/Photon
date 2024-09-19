@@ -103,8 +103,8 @@ void render_buckets(const SceneFile* scene_file,
   (*signals_sender) |= SignalFlags::Done;
 }
 
-void path_trace(const SceneFile& scene_file,
-                const PathTracingSettings& settings,
+void path_trace(const PathTracingSettings& settings,
+                const SceneFile& scene_file,
                 std::shared_ptr<Output> output,
                 Signals* master_signals,
                 std::vector<Signals*>* thread_signals,
