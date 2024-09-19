@@ -7,7 +7,7 @@
 #include "util/random_generator.hpp"
 #include <thread>
 
-Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGenerator& rnd)
+Color trace(const PathTracingSettings& settings, const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGenerator& rnd)
 {
   // store all rays that need to be traced, their accumulated attenuation, and their depth
   struct PathVertex
@@ -46,17 +46,20 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGen
       }
       if (!material.is_delta())
       {
-        LightSample light_sample = scene_file.scene->get_light_sampler().sample(hit_info, rnd);
-        const glm::vec3 outgoing_dir = glm::normalize(light_sample.pos - hit_info.pos);
-        const glm::vec3 attenuation = material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir);
-        const glm::vec3 contribution = (light_sample.emission * path_vertex.attenuation * attenuation);
-        if (glm::dot(contribution, contribution) > 0.0000001f)
+        for (uint32_t i = 0; i < settings.nee_sample_count; i++)
         {
-          const float light_distance = glm::distance(light_sample.pos, hit_info.pos) - 4 * RAY_START_OFFSET;
-          // trace shadow ray with small offset in the direction of the normal to avoid shadow acne
-          const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.get_oriented_face_geometric_normal(), outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
-          HitInfo shadow_hit_info;
-          if (!scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info)) color += contribution;
+          LightSample light_sample = scene_file.scene->get_light_sampler().sample(hit_info, rnd);
+          const glm::vec3 outgoing_dir = glm::normalize(light_sample.pos - hit_info.pos);
+          const glm::vec3 attenuation = material.eval(hit_info, path_vertex.ray.get_dir(), outgoing_dir);
+          const glm::vec3 contribution = (light_sample.emission * path_vertex.attenuation * attenuation);
+          if (glm::dot(contribution, contribution) > 0.0000001f)
+          {
+            const float light_distance = glm::distance(light_sample.pos, hit_info.pos) - 4 * RAY_START_OFFSET;
+            // trace shadow ray with small offset in the direction of the normal to avoid shadow acne
+            const Ray shadow_ray(hit_info.pos + RAY_START_OFFSET * hit_info.get_oriented_face_geometric_normal(), outgoing_dir, RayConfig{.max_t = light_distance, .anyhit = true, .backface_culling = false});
+            HitInfo shadow_hit_info;
+            if (!scene_file.scene->get_geometry().intersect(shadow_ray, shadow_hit_info)) color += contribution / float(settings.nee_sample_count);
+          }
         }
       }
     }
@@ -70,8 +73,8 @@ Color trace(const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGen
   return color;
 }
 
-void render_buckets(const SceneFile* scene_file,
-                    const PathTracingSettings* settings,
+void render_buckets(const PathTracingSettings* settings,
+                    const SceneFile* scene_file,
                     std::shared_ptr<Output> output,
                     BucketRendering* bucket_rendering,
                     Signals* signals_receiver,
@@ -90,7 +93,7 @@ void render_buckets(const SceneFile* scene_file,
         for (uint32_t s = 0; s < settings->sample_count; s++)
         {
           if ((*signals_receiver) & SignalFlags::Stop) return;
-          color += trace(*scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, settings->use_jittering, &rnd), rnd);
+          color += trace(*settings, *scene_file, get_camera_coordinates(scene_file->settings.resolution, {x, y}, settings->use_jittering, &rnd), rnd);
           // wait if preview is currently updated
           while ((*signals_receiver) & SignalFlags::PreventOutputAccess);
           (*signals_sender) |= SignalFlags::PreventOutputAccess;
@@ -112,5 +115,5 @@ void path_trace(const PathTracingSettings& settings,
 {
   BucketRendering bucket_rendering(scene_file);
   std::vector<std::jthread> threads;
-  for (uint32_t i = 0; i < thread_count; i++) threads.push_back(std::jthread(&render_buckets, &scene_file, &settings, output, &bucket_rendering, master_signals, (*thread_signals)[i], i));
+  for (uint32_t i = 0; i < thread_count; i++) threads.push_back(std::jthread(&render_buckets, &settings, &scene_file, output, &bucket_rendering, master_signals, (*thread_signals)[i], i));
 }

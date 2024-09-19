@@ -24,6 +24,7 @@ int parse_args(int argc, char** argv, argparse::ArgumentParser& program) {
   std::vector<std::string> algorithm_choices = get_algorithm_name_list();
   for (const auto choice : algorithm_choices) algorithm_arg.add_choice(choice);
   program.add_argument("--sample_count").scan<'u', uint32_t>().help("Number of samples per pixel");
+  program.add_argument("--nee_sample_count").scan<'u', uint32_t>().help("Number of nee samples at every path vertex");
 
   try {
     program.parse_args(argc, argv);
@@ -42,13 +43,15 @@ int parse_args(int argc, char** argv, argparse::ArgumentParser& program) {
 Renderer::Settings get_settings(const argparse::ArgumentParser& program)
 {
   uint32_t sample_count = 128;
+  uint32_t nee_sample_count = 2;
   RenderingAlgorithms rendering_algorithm = RenderingAlgorithms::PathTracing;
   const uint32_t thread_count = program.is_used("--thread_count") ? program.get<uint32_t>("--thread_count") : std::thread::hardware_concurrency();
   const bool show_preview = program.get<bool>("--show_preview");
   if (program.is_used("--algorithm")) get_algorithm(program.get<std::string>("--algorithm"), rendering_algorithm);
   if (program.is_used("--sample_count")) sample_count = program.get<uint32_t>("--sample_count");
+  if (program.is_used("--nee_sample_count")) nee_sample_count = program.get<uint32_t>("--nee_sample_count");
   if (rendering_algorithm == RenderingAlgorithms::WhittedRayTracing) return Renderer::Settings(WhittedSettings{}, thread_count, show_preview);
-  else if (rendering_algorithm == RenderingAlgorithms::PathTracing) return Renderer::Settings(PathTracingSettings{.sample_count = sample_count, .use_jittering = true}, thread_count, show_preview);
+  else if (rendering_algorithm == RenderingAlgorithms::PathTracing) return Renderer::Settings(PathTracingSettings{.sample_count = sample_count, .nee_sample_count = nee_sample_count, .use_jittering = true}, thread_count, show_preview);
   else PH_THROW("Unknown rendering algorithm!");
 }
 

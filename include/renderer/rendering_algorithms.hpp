@@ -37,6 +37,7 @@ void whitted_ray_trace(const WhittedSettings& whitted_settings,
 struct PathTracingSettings
 {
   uint32_t sample_count;
+  uint32_t nee_sample_count;
   bool use_jittering;
 };
 
