@@ -43,11 +43,9 @@ add_executable(Photon src/main.cpp ${SOURCE_FILES})
 
 target_include_directories(Photon PRIVATE "${PROJECT_SOURCE_DIR}/include"
   "${PROJECT_SOURCE_DIR}/dependencies/"
-  "${SDL2_DIR}/include",
+  "${SDL2_DIR}/include"
   "${SPDLOG_DIR}/include")
 
 add_subdirectory("${SDL2_DIR}")
-target_link_libraries(Photon SDL2)
-
 add_subdirectory("${SPDLOG_DIR}")
-target_link_libraries(Photon spdlog::spdlog)
+target_link_libraries(Photon SDL2 spdlog::spdlog)
