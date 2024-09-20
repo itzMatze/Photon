@@ -1,7 +1,7 @@
 #include "scene/scene_factory.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "image/image_file_handler.hpp"
-#include "object/material.hpp"
+#include "material/material.hpp"
 #include "object/object.hpp"
 #include "scene/scene.hpp"
 #include "scene/scene_builder.hpp"

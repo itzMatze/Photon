@@ -1,4 +1,4 @@
-#include "object/texture.hpp"
+#include "material/texture.hpp"
 #include "glm/common.hpp"
 #include "renderer/color.hpp"
 

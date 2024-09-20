@@ -11,7 +11,7 @@
 #include "rapidjson/document.h"
 
 #include "image/image_file_handler.hpp"
-#include "object/material.hpp"
+#include "material/material.hpp"
 #include "scene/scene_builder.hpp"
 #include "util/log.hpp"
 #include "util/timer.hpp"

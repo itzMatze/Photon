@@ -8,15 +8,18 @@ set(SPDLOG_DIR "${PROJECT_SOURCE_DIR}/dependencies/spdlog")
 set(SOURCE_FILES
   src/image/bitmap.cpp
   src/image/image_file_handler.cpp
+  src/material/material.cpp
+  src/material/dielectric.cpp
+  src/material/diffuse.cpp
+  src/material/metal.cpp
+  src/material/texture.cpp
   src/object/aabb.cpp
   src/object/bvh.cpp
   src/object/light.cpp
   src/object/light_sampler.cpp
-  src/object/material.cpp
   src/object/model.cpp
   src/object/object.cpp
   src/object/object_instance.cpp
-  src/object/texture.cpp
   src/object/triangle.cpp
   src/renderer/bucket_rendering.cpp
   src/renderer/camera.cpp

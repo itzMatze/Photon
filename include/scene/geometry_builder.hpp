@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include "object/material.hpp"
+#include "material/material.hpp"
+#include "material/texture.hpp"
 #include "object/object.hpp"
-#include "object/texture.hpp"
 #include "scene/geometry.hpp"
 #include "util/interpolatable_data.hpp"
 #include "util/spatial_configuration.hpp"

@@ -1,6 +1,6 @@
 #include "scene/geometry_builder.hpp"
 #include <memory>
-#include "object/material.hpp"
+#include "material/material.hpp"
 #include "object/object_instance.hpp"
 #include "util/spatial_configuration.hpp"
 
@@ -22,7 +22,7 @@ uint32_t GeometryBuilder::add_object_instance(uint32_t object_id, int32_t materi
 
 uint32_t GeometryBuilder::add_material(const MaterialParameters& material)
 {
-  materials->emplace_back(Material(textures, material));
+  materials->emplace_back(Material(material, textures));
   return materials->size() - 1;
 }
 

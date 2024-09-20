@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
+#include "material/material.hpp"
 #include "object/bvh.hpp"
-#include "object/material.hpp"
 #include "object/object.hpp"
 #include "object/object_instance.hpp"
 #include "renderer/hit_info.hpp"
