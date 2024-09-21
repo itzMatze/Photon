@@ -34,7 +34,7 @@ Color trace(const PathTracingSettings& settings, const SceneFile& scene_file, gl
     if (scene_file.scene->get_geometry().intersect(path_vertex.ray, hit_info))
     {
       const Material& material = (hit_info.material_id == -1) ? default_material : scene_file.scene->get_geometry().get_material(hit_info.material_id);
-      if (path_vertex.depth == 0) color += path_vertex.attenuation * material.get_emission(hit_info);
+      if (path_vertex.is_delta) color += path_vertex.attenuation * material.get_emission(hit_info);
       const uint32_t depth = path_vertex.depth + 1;
       if (depth < scene_file.settings.max_path_length)
       {
