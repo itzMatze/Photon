@@ -5,6 +5,7 @@
 #include "renderer/ray.hpp"
 #include "renderer/rendering_algorithms.hpp"
 #include "util/random_generator.hpp"
+#include "util/spectral.hpp"
 #include <thread>
 
 Color trace(const PathTracingSettings& settings, const SceneFile& scene_file, glm::vec2 camera_coordinates, RandomGenerator& rnd)
@@ -21,6 +22,7 @@ Color trace(const PathTracingSettings& settings, const SceneFile& scene_file, gl
   std::vector<BSDFSample> bsdf_samples;
   HitInfo hit_info;
   Material default_material;
+  uint32_t wavelength = get_random_wavelength(rnd.random_float());
   // add initial vertex of the camera
   path_vertices.push_back(PathVertex{scene_file.scene->get_camera().get_ray(camera_coordinates), glm::vec3(1.0, 1.0, 1.0), 0, true});
   Color color(0.0, 0.0, 0.0);
@@ -69,6 +71,7 @@ Color trace(const PathTracingSettings& settings, const SceneFile& scene_file, gl
       color += scene_file.scene->get_background_color() * path_vertex.attenuation;
     }
   }
+  color *= wavelength_to_rgb(wavelength) * get_inv_wavelength_probability();
   color.value.a = 1.0f;
   return color;
 }

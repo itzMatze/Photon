@@ -37,6 +37,7 @@ set(SOURCE_FILES
   src/scene/scene_builder.cpp
   src/scene/scene_file_handler.cpp
   src/util/spatial_configuration.cpp
+  src/util/spectral.cpp
   src/util/random_generator.cpp
   dependencies/stb/stb_image.cpp
   dependencies/stb/stb_image_write.cpp
